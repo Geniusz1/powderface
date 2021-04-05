@@ -32,8 +32,10 @@ ui.container = function()
             end
         end
     end
-    function c:append(child)
-        table.insert(self.children, child)
+    function c:append(...)
+        for _, child in ipairs({...}) do
+            table.insert(self.children, child)
+        end
     end
     return c
 end
@@ -142,7 +144,7 @@ ui.fixed_text = function(x, y, max_w, text, r, g, b, a)
     function txt:draw()
         if self.visible then
             self.real_x = self.x
-            gfx.drawLine(self.x, self.y-2, self.x2, self.y-2, 255, 0, 0)
+            -- gfx.drawLine(self.x, self.y-2, self.x2, self.y-2, 255, 0, 0)
             if tpt.textwidth(self.text) > self.max_w then
                 self.real_x = self.x2 - tpt.textwidth(self.visible_text)
             end
@@ -256,7 +258,7 @@ ui.checkbox = function(x, y, text, r, g, b)
     cb.enabled = true
     cb.hover = false
     cb.held = false
-    color = {r = r or 255, g = g or 255, b = b or 255},
+    cb.color = {r = r or 255, g = g or 255, b = b or 255},
     cb:set_backgroud(r, g, b)
     cb:drawadd(function (self)
         local r, g, b = self.color.r, self.color.g, self.color.b
@@ -298,6 +300,10 @@ ui.checkbox = function(x, y, text, r, g, b)
             self.label:set_color(100, 100, 100)
             self:set_backgroud(100, 100, 100)
         end
+    end
+    function cb:set_checked(checked)
+        self.checked = checked
+        self.draw_background = checked
     end
     function cb:mousemove(x, y, dx, dy)
         self.hover = ui.contains(x, y, self.x, self.y, self.x2 + 6 + self.label.w, self.y2) and self.enabled
@@ -405,9 +411,9 @@ ui.radio_button = function(x, y, text, r, g, b, a)
     return rb
 end
 
-ui.radio_group = function()
+ui.radio_group = function(...)
     local rg = {
-        buttons = {},
+        buttons = {...},
         selected = 0,
         enabled = true,
         visible = true
@@ -538,7 +544,7 @@ ui.switch = function(x, y, text, r, g, b, colorful)
             end
         end
     end
-    function box:drawadd(f)
+    function sw:drawadd(f)
         table.insert(self.drawlist, f)
     end
     function sw:set_color(r, g, b)
@@ -579,7 +585,6 @@ ui.inputbox = function(x, y, w, h, placeholder, r, g, b)
     ph = ph - 4 -- for some reason it's 4 too many
     if w == 0 then w = pw + 7 end
     if h == 0 then h = ph + 9 end
-    tpt.log(h)
     local ib = ui.box(x, y, w, h)
     ib.placeholder = ui.text(x + 4, y + h/2 - ph/2, placeholder, r, g, b, 100)
     ib.text = ui.fixed_text(x + 4, y + h/2 - ph/2, w - 8, '', r, g, b)
@@ -735,10 +740,7 @@ ui.list = function(x, y, w, h, draw_separator, r, g, b, a)
             end
         end
         local pos = self.scrollbar_pos + max_items - 1
-        self.visible_items = {unpack(self.items, self.scrollbar_pos, pos)}
-        --print(self.scrollbar_pos)
-        print(self.scrollbar_pos, max_items)
-        
+        self.visible_items = {unpack(self.items, self.scrollbar_pos, pos)}        
     end)
     function list:append(item, pos)
         table.insert(self.items, pos or #self.items + 1, item)
