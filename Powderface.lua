@@ -46,8 +46,8 @@ ui.box = function(x, y, w, h, r, g, b, a, draw_background, draw_border)
         y = y,
         w = w,
         h = h,
-        x2 = x + w,
-        y2 = y + h,
+        x2 = x + w - 1, -- x2, y2 adjustment
+        y2 = y + h - 1, -- x2, y2 adjustment
         visible = true,
         draw_background = draw_background or false,
         draw_border = draw_border or true,
@@ -140,7 +140,7 @@ ui.fixed_text = function(x, y, max_w, text, r, g, b, a)
     txt.real_x = x
     txt.max_w = max_w
     txt.x2 = x + max_w - 1
-    txt.y2 = y + txt.h
+    txt.y2 = y + txt.h - 1 -- x2, y2 adjustment
     function txt:draw()
         if self.visible then
             self.real_x = self.x
@@ -197,8 +197,8 @@ ui.button = function(x, y, w, h, text, f, r, g, b)
         end
         self.label:draw()
         if not self.held then            
-            gfx.drawLine(self.x, self.y2, self.x2-2, self.y2, r, g, b)
-            gfx.drawLine(self.x-1, self.y + 1, self.x-1, self.y2, r, g, b)
+            gfx.drawLine(self.x, self.y2 + 1, self.x2-1, self.y2 + 1, r, g, b)
+            gfx.drawLine(self.x-1, self.y + 1, self.x-1, self.y2 + 1, r, g, b)
         end
     end)
     function button:set_color(r, g, b)
@@ -266,15 +266,15 @@ ui.checkbox = function(x, y, text, r, g, b)
             r, g, b = 100, 100, 100
         end
         if self.hover then
-            gfx.fillRect(self.x2 + 3, self.y - 1, self.label.w + 3, 11, self.color.r, self.color.g, self.color.b, 50)
+            gfx.fillRect(self.x2 + 4, self.y - 1, self.label.w + 3, 11, self.color.r, self.color.g, self.color.b, 50)
         end
         if self.draw_background then
             gfx.drawLine(self.x + 1, self.y + 3, self.x + 3, self.y + 5, 0, 0, 0)
             gfx.drawLine(self.x + 1, self.y + 4, self.x + 3, self.y + 6, 0, 0, 0)
             gfx.drawLine(self.x + 1, self.y + 5, self.x + 3, self.y + 7, 0, 0, 0)
-            gfx.drawLine(self.x + 4, self.y + 4, self.x2 - 1, self.y, 0, 0, 0)
-            gfx.drawLine(self.x + 4, self.y + 5, self.x2 - 1, self.y + 1, 0, 0, 0)
-            gfx.drawLine(self.x + 4, self.y + 6, self.x2 - 1, self.y + 2, 0, 0, 0)
+            gfx.drawLine(self.x + 4, self.y + 4, self.x2, self.y, 0, 0, 0)
+            gfx.drawLine(self.x + 4, self.y + 5, self.x2, self.y + 1, 0, 0, 0)
+            gfx.drawLine(self.x + 4, self.y + 6, self.x2, self.y + 2, 0, 0, 0)
         end
         if self.held then
             gfx.fillRect(self.x + 1, self.y + 1, 7, 7, self.color.r, self.color.g, self.color.b)
@@ -329,8 +329,8 @@ ui.radio_button = function(x, y, text, r, g, b, a)
         y = y,
         w = 9,
         h = 9,
-        x2 = x + 9,
-        y2 = y + 9,
+        x2 = x + 8, -- x2, y2 adjustment
+        y2 = y + 8, -- x2, y2 adjustment
         visible = true,
         color = {r = r or 255, g = g or 255, b = b or 255},
         selected = false,
@@ -347,27 +347,27 @@ ui.radio_button = function(x, y, text, r, g, b, a)
                 r, g, b = 100, 100, 100
             end
             if self.hover then
-                gfx.fillRect(self.x2 + 3, self.y - 1, self.label.w + 3, 11, self.color.r, self.color.g, self.color.b, 50)
+                gfx.fillRect(self.x2 + 4, self.y - 1, self.label.w + 3, 11, self.color.r, self.color.g, self.color.b, 50)
             end
             if self.selected then
                 gfx.fillRect(self.x + 2, self.y + 2, 5, 5, r, g, b)
                 gfx.drawPixel(self.x + 2, self.y + 2, 0, 0, 0) -- top left
-                gfx.drawPixel(self.x + 2, self.y2 - 3, 0, 0, 0) -- bottom left
-                gfx.drawPixel(self.x2 - 3, self.y + 2, 0, 0, 0) -- top right
-                gfx.drawPixel(self.x2 - 3, self.y2 - 3, 0, 0, 0) -- bottom right
+                gfx.drawPixel(self.x + 2, self.y2 - 2, 0, 0, 0) -- bottom left
+                gfx.drawPixel(self.x2 - 2, self.y + 2, 0, 0, 0) -- top right
+                gfx.drawPixel(self.x2 - 2, self.y2 - 2, 0, 0, 0) -- bottom right
             end
             if self.held then
                 gfx.fillRect(self.x + 1, self.y + 1, 7, 7, self.color.r, self.color.g, self.color.b)
             end
             -- the 'circle'
-            gfx.drawLine(self.x, self.y + 2, self.x, self.y2 - 3, r, g, b)
-            gfx.drawLine(self.x2 - 1, self.y + 2, self.x2 - 1, self.y2 - 3, r, g, b)
-            gfx.drawLine(self.x + 2, self.y, self.x2 - 3, self.y, r, g, b)
-            gfx.drawLine(self.x + 2, self.y2 - 1, self.x2 - 3, self.y2 - 1, r, g, b)
+            gfx.drawLine(self.x, self.y + 2, self.x, self.y2 - 2, r, g, b)
+            gfx.drawLine(self.x2, self.y + 2, self.x2, self.y2 - 2, r, g, b)
+            gfx.drawLine(self.x + 2, self.y, self.x2 - 2, self.y, r, g, b)
+            gfx.drawLine(self.x + 2, self.y2, self.x2 - 2, self.y2, r, g, b)
             gfx.drawPixel(self.x + 1, self.y + 1, r, g, b)
-            gfx.drawPixel(self.x + 1, self.y2 - 2, r, g, b)
-            gfx.drawPixel(self.x2 - 2, self.y + 1, r, g, b)
-            gfx.drawPixel(self.x2 - 2, self.y2 - 2, r, g, b)
+            gfx.drawPixel(self.x + 1, self.y2 - 1, r, g, b)
+            gfx.drawPixel(self.x2 - 1, self.y + 1, r, g, b)
+            gfx.drawPixel(self.x2 - 1, self.y2 - 1, r, g, b)
             -- that was the 'circle'
             self.label:draw()
             for _, f in ipairs(self.drawlist) do
@@ -473,8 +473,8 @@ ui.switch = function(x, y, text, r, g, b, colorful)
         y = y,
         w = 15,
         h = 9,
-        x2 = x + 15,
-        y2 = y + 9,
+        x2 = x + 14, -- x2, y2 adjustment
+        y2 = y + 8, -- x2, y2 adjustment
         visible = true,
         color = {r = r or 255, g = g or 255, b = b or 255},
         switched_on = false,
@@ -502,41 +502,41 @@ ui.switch = function(x, y, text, r, g, b, colorful)
                 r, g, b = 100, 100, 100
             end
             if self.hover then
-                gfx.fillRect(self.x2 + 3, self.y - 1, self.label.w + 3, 11, self.color.r, self.color.g, self.color.b, 50)
+                gfx.fillRect(self.x2 + 4, self.y - 1, self.label.w + 3, 11, self.color.r, self.color.g, self.color.b, 50)
             end
             
             if self.switched_on then
                 gfx.fillRect(self.x + 8, self.y + 2, 5, 5, r, g, b)
                 gfx.drawPixel(self.x + 8, self.y + 2, 0, 0, 0) -- top left
-                gfx.drawPixel(self.x + 8, self.y2 - 3, 0, 0, 0) -- bottom left
+                gfx.drawPixel(self.x + 8, self.y2 - 2, 0, 0, 0) -- bottom left
                 gfx.drawPixel(self.x + 12, self.y + 2, 0, 0, 0) -- top right
-                gfx.drawPixel(self.x + 12, self.y2 - 3, 0, 0, 0) -- bottom right
+                gfx.drawPixel(self.x + 12, self.y2 - 2, 0, 0, 0) -- bottom right
             else 
                 gfx.fillRect(self.x + 2, self.y + 2, 5, 5, r, g, b)
                 gfx.drawPixel(self.x + 2, self.y + 2, 0, 0, 0) -- top left
-                gfx.drawPixel(self.x + 2, self.y2 - 3, 0, 0, 0) -- bottom left
+                gfx.drawPixel(self.x + 2, self.y2 - 2, 0, 0, 0) -- bottom left
                 gfx.drawPixel(self.x + 6, self.y + 2, 0, 0, 0) -- top right
-                gfx.drawPixel(self.x + 6, self.y2 - 3, 0, 0, 0) -- bottom right
+                gfx.drawPixel(self.x + 6, self.y2 - 2, 0, 0, 0) -- bottom right
             end
             if self.held then
                 gfx.fillRect(self.x + 5, self.y + 2, 5, 5, r, g, b)
                 if self.switched_on then 
                     gfx.drawPixel(self.x + 5, self.y + 2, 0, 0, 0) -- top left
-                    gfx.drawPixel(self.x + 5, self.y2 - 3, 0, 0, 0) -- bottom left
+                    gfx.drawPixel(self.x + 5, self.y2 - 2, 0, 0, 0) -- bottom left
                 else
                     gfx.drawPixel(self.x + 9, self.y + 2, 0, 0, 0) -- top right
-                    gfx.drawPixel(self.x + 9, self.y2 - 3, 0, 0, 0) -- bottom right
+                    gfx.drawPixel(self.x + 9, self.y2 - 2, 0, 0, 0) -- bottom right
                 end
             end
             -- the 'circle'
-            gfx.drawLine(self.x, self.y + 2, self.x, self.y2 - 3, r, g, b) -- left
-            gfx.drawLine(self.x2 - 1, self.y + 2, self.x2 - 1, self.y2 - 3, r, g, b) -- right
-            gfx.drawLine(self.x + 2, self.y, self.x2 - 3, self.y, r, g, b) -- top
-            gfx.drawLine(self.x + 2, self.y2 - 1, self.x2 - 3, self.y2 - 1, r, g, b) -- bottom
+            gfx.drawLine(self.x, self.y + 2, self.x, self.y2 - 2, r, g, b) -- left
+            gfx.drawLine(self.x2, self.y + 2, self.x2, self.y2 - 2, r, g, b) -- right
+            gfx.drawLine(self.x + 2, self.y, self.x2 - 2, self.y, r, g, b) -- top
+            gfx.drawLine(self.x + 2, self.y2, self.x2 - 2, self.y2, r, g, b) -- bottom
             gfx.drawPixel(self.x + 1, self.y + 1, r, g, b) -- top left
-            gfx.drawPixel(self.x + 1, self.y2 - 2, r, g, b) -- bottom left
-            gfx.drawPixel(self.x2 - 2, self.y + 1, r, g, b) -- top right
-            gfx.drawPixel(self.x2 - 2, self.y2 - 2, r, g, b) -- bottom right
+            gfx.drawPixel(self.x + 1, self.y2 - 1, r, g, b) -- bottom left
+            gfx.drawPixel(self.x2 - 1, self.y + 1, r, g, b) -- top right
+            gfx.drawPixel(self.x2 - 1, self.y2 - 1, r, g, b) -- bottom right
             -- that was the 'circle'
             self.label:draw()
             for _, f in ipairs(self.drawlist) do
@@ -604,9 +604,9 @@ ui.inputbox = function(x, y, w, h, placeholder, r, g, b)
         if self.focus then
             gfx.fillRect(self.x + 1, self.y + 1, self.w-2, self.h-2, self.color.r, self.color.g, self.color.b, 30)
             if math.floor(socket.gettime()*2) % 2 == 0 and not self.cursor_moving then
-                gfx.drawLine(self.x + cursorx,self.y + 2,self.x + cursorx,self.y2-3, self.color.r, self.color.g, self.color.b)
+                gfx.drawLine(self.x + cursorx,self.y + 2,self.x + cursorx,self.y2-2, self.color.r, self.color.g, self.color.b)
             elseif self.cursor_moving then
-                gfx.drawLine(self.x + cursorx,self.y + 2,self.x + cursorx,self.y2-3, self.color.r, self.color.g, self.color.b)
+                gfx.drawLine(self.x + cursorx,self.y + 2,self.x + cursorx,self.y2-2, self.color.r, self.color.g, self.color.b)
             end
         end
         if #self.text.text ~= 0  then
@@ -712,13 +712,16 @@ ui.inputbox = function(x, y, w, h, placeholder, r, g, b)
     return ib
 end
 
-ui.list = function(x, y, w, h, draw_separator, r, g, b, a)
+ui.list = function(x, y, w, h, draw_separator, draw_scrollbar, r, g, b, a)
     local list = ui.box(x, y, w, h, r, g, b, a)
     list.items = {}
     list.visible_items = {}
     list.scrollbar_pos = 1
     list.hover = false
     list.draw_separator = draw_separator or false
+    list.draw_scrollbar = draw_scrollbar or true
+    list.scrollbar_hover = false
+    list.scrollbar_held = false
     local max_items = 1
     list:drawadd(function(self)
         for i, item in ipairs(self.visible_items) do
@@ -726,12 +729,9 @@ ui.list = function(x, y, w, h, draw_separator, r, g, b, a)
             item.y2 = item.y + item.h
             item.x = self.x + 4
             item.x2 = item.x + item.w
-            if self.draw_separator then
-                item.y = item.y + i
-            end
             item:draw()
-            if self.draw_separator then
-                gfx.drawLine(self.x, item.y2 , self.x2 - 1, item.y2 , self.border.r, self.border.g, self.border.b, self.border.a)
+            if self.draw_separator and i < #self.visible_items then
+                gfx.drawLine(self.x, item.y2, self.x2 - 5, item.y2 , self.border.r, self.border.g, self.border.b, self.border.a)
             end
         end
         for i, item in ipairs(self.visible_items) do
@@ -739,8 +739,15 @@ ui.list = function(x, y, w, h, draw_separator, r, g, b, a)
                 max_items = i
             end
         end
+        
         local pos = self.scrollbar_pos + max_items - 1
-        self.visible_items = {unpack(self.items, self.scrollbar_pos, pos)}        
+        self.visible_items = {unpack(self.items, self.scrollbar_pos, pos)}
+        local scrollbar_h = self.h/(#self.items - max_items + 1)
+        local scrollbar_y, scrollbar_y2 = self.y + (self.scrollbar_pos - 1)*scrollbar_h + 2, self.y + scrollbar_h + (self.scrollbar_pos - 1)*scrollbar_h - 6
+        if self.draw_scrollbar and #self.items > max_items then 
+            gfx.drawRect(self.x2 - 2, scrollbar_y, 1, scrollbar_h, self.border.r, self.border.g, self.border.b)
+            gfx.drawLine(self.x2 - 4, self.y + 1, self.x2 - 4, self.y2 - 1, self.border.r - 150, self.border.g - 150, self.border.b - 150)
+        end
     end)
     function list:append(item, pos)
         table.insert(self.items, pos or #self.items + 1, item)
@@ -748,12 +755,43 @@ ui.list = function(x, y, w, h, draw_separator, r, g, b, a)
     end
     function list:mousemove(x, y, dx, dy)
         self.hover = ui.contains(x, y, self.x, self.y, self.x2, self.y2)
+        self.scrollbar_hover = ui.contains(x, y, self.x2 - 5, self.y, self.x2, self.y2)
+        if self.scrollbar_held then
+            local diff = math.ceil((y - self.y) / (self.h/(#self.items - max_items + 1)))
+            if diff < 1 then
+                diff = 1
+            elseif diff > #self.items - max_items + 1 then
+                diff = #self.items - max_items + 1
+            end
+            self.scrollbar_pos = diff
+        end
         for _, item in ipairs(self.items) do
             if item['mousemove'] then
                 item:mousemove(x, y, dx, dy)
             end
         end
         -- TODO automate event handling
+    end
+    function list:mousedown(x, y, button )
+        self.scrollbar_held = self.scrollbar_hover
+        for _, item in ipairs(self.items) do
+            if item['mousemove'] then
+                item:mousemove(x, y, dx, dy)
+            end
+        end
+        -- TODO automate event handling
+    end
+    function list:mouseup(x, y, button, reason)
+        if self.scrollbar_held then
+            self.scrollbar_held = false
+            local diff = math.ceil((y - self.y) / (self.h/(#self.items - max_items + 1)))
+            if diff < 1 then
+                diff = 1
+            elseif diff > #self.items - max_items + 1 then
+                diff = #self.items - max_items + 1
+            end
+            self.scrollbar_pos = diff
+        end
     end
     function list:mousewheel(x, y, d)
         if self.hover then

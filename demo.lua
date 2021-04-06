@@ -7,36 +7,44 @@ local mx2, my2 = mx + mw, my + mh
 local main = ui.container()
 
 local window = ui.box(mx, my, mw, mh)
+
 local input = ui.inputbox(mx + 10, my + 10, 100, 0, 'This is an inputbox')
-local files = ui.list(mx + 10, my + 34, 100, 170, false)
+
+local files = ui.list(mx + 10, my + 34, 100, 170)
+
 local text = ui.text(input.x2 + 10, my + 14, 'Powderface v1.0, TPT user interface library made by Geniusz1', 0, 255, 0)
 local text2 = ui.text(input.x2 + 10, text.y2 + 10, 'This is a text')
 local text3 = ui.text(input.x2 + 10, text2.y2 + 10, 'This is also a text, but with a different color', 80, 150, 200)
+
 local button = ui.button(input.x2 + 10, text3.y2 + 10, 0, 0, 'Click me!', function() print('Yay!') end)
 local button2 = ui.button(button.x2 + 10, text3.y2 + 10, 80, 25, 'No, click ME!', function() print('Wooo!') end, 0, 255, 255)
 local button3 = ui.button(button2.x2 + 10, text3.y2 + 10, 0, 0, 'I\'m disabled :(', function() print('Wooo!') end)
 button3:set_enabled(false)
+
 local check = ui.checkbox(files.x2 + 10, button2.y2 + 10, 'Disable the button')
-local check2 = ui.checkbox(files.x2 + 10, check.y2 + 5, 'Checkboxes', 255, 255, 0)
-local switch = ui.switch(files.x2 + 10, check2.y2 + 5, 'Get ready for switches!')
-local switch2 = ui.switch(files.x2 + 10, switch.y2 + 5, 'I\'m colorful!', 255, 255, 255, true)
-local switch3 = ui.switch(files.x2 + 10, switch2.y2 + 5, 'I\'m magenta!', 255, 0, 255)
+local check2 = ui.checkbox(files.x2 + 10, check.y2 + 5, 'Draw list item separators', 255, 255, 0)
+
+local switch = ui.switch(files.x2 + 7, check2.y2 + 5, 'Get ready for switches!')
+local switch2 = ui.switch(files.x2 + 7, switch.y2 + 5, 'Yay!')
+local switch3 = ui.switch(files.x2 + 7, switch2.y2 + 5, 'I\'m colorful!', 255, 255, 255, true)
+local switch4 = ui.switch(files.x2 + 7, switch3.y2 + 5, 'I\'m magenta!', 255, 0, 255)
 
 local radio = ui.radio_button(files.x2 + 150, button2.y2 + 10, 'We are radio buttons!')
-local radio1 = ui.radio_button(files.x2 + 150, button2.y2 + 20, 'Isn\'t it beautiful')
-local radio2 = ui.radio_button(files.x2 + 150, button2.y2 + 30, 'It sure is')
-local radio3 = ui.radio_button(files.x2 + 150, button2.y2 + 40, 'Yeah')
+local radio1 = ui.radio_button(files.x2 + 150, radio.y2 + 4, 'Isn\'t it beautiful')
+local radio2 = ui.radio_button(files.x2 + 150, radio1.y2 + 4, 'It sure is')
+local radio3 = ui.radio_button(files.x2 + 150, radio2.y2 + 4, 'Yeah')
 
-local radiob = ui.radio_button(files.x2 + 150, button2.y2 + 60, 'We are of a different group', 255, 0, 0)
-local radiob2 = ui.radio_button(files.x2 + 150, button2.y2 + 70, 'It\'s so user-friendly', 255, 0, 0)
+local radiob = ui.radio_button(files.x2 + 150, radio3.y2 + 10, 'We are of a different group', 255, 0, 0)
+local radiob2 = ui.radio_button(files.x2 + 150, radiob.y2 + 4, 'It\'s so user-friendly', 255, 0, 0)
 
 local rgroup = ui.radio_group(radio, radio1, radio2, radio3)
 local rgroup2 = ui.radio_group(radiob, radiob2)
+rgroup:set_selected(1)
 
 check:set_checked(true)
 
 files:append(ui.text(files.x, files.y, 'This is a list'))
-for i = 2, 30 do   
+for i = 2, 1000 do   
     local item = ui.text(files.x, files.y, 'item '..i)
     files:append(item)
 end
@@ -56,7 +64,7 @@ main:append(
     switch,
     switch2,
     switch3,
-    radio,
+    switch4,
     rgroup,
     rgroup2
 )
@@ -71,6 +79,7 @@ local function tick()
         main:draw()
         button3:set_enabled(not check.checked)
         button3.label:set_text(check.checked and 'I\'m disabled :(' or 'I\'m enabled :D')
+        files.draw_separator = check2.checked
     end
 end
 
