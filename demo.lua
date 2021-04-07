@@ -1,6 +1,6 @@
 require('scripts.Powderface.Powderface')
 
-local mw, mh = 420, 214
+local mw, mh = 420, 274
 local mx, my = gfx.WIDTH/2 - mw/2, gfx.HEIGHT/2 - mh/2
 local mx2, my2 = mx + mw, my + mh
 
@@ -39,12 +39,23 @@ local radiob2 = ui.radio_button(files.x2 + 150, radiob.y2 + 4, 'It\'s so user-fr
 
 local rgroup = ui.radio_group(radio, radio1, radio2, radio3)
 local rgroup2 = ui.radio_group(radiob, radiob2)
+
+local textscrollllll = ui.scroll_text(files.x2 + 100, radiob.y2 + 84, 100, 'This is it, it being not only a text box, yet also a scrolltext box', 'right')
+local textscrollllllBox = ui.box(files.x2 + 6, radiob.y2 + 80, 110, textscrollllll.h + 5)
+
+local progress = ui.progressbar(files.x2 + 10, radiob.y2 + 24, 200, 10, true)
+progress:set_progress(50)
+
+local slider = ui.slider(files.x2 + 10, radiob.y2 + 54, 200, 0, 10, 1)
+
+
 rgroup:set_selected(1)
+textscrollllll:set_scroll_pos(4)
 
 check:set_checked(true)
 
 files:append(ui.text(files.x, files.y, 'This is a list'))
-for i = 2, 1000 do   
+for i = 2, 24 do   
     local item = ui.text(files.x, files.y, 'item '..i)
     files:append(item)
 end
@@ -66,7 +77,11 @@ main:append(
     switch3,
     switch4,
     rgroup,
-    rgroup2
+    rgroup2,
+    textscrollllll,
+    textscrollllllBox,
+    progress,
+    slider
 )
 
 window.draw_background = true
@@ -112,9 +127,12 @@ end
 
 
 local function keypress(key, scan, rep, shift, ctrl, alt)
-    main:handle_event('keypress', key, scan, rep, shift, ctrl, alt)
-    if scan == 41 then enabled = false end
-    return false
+    if enabled then
+        main:handle_event('mousewheel', x, y, d) 
+        main:handle_event('keypress', key, scan, rep, shift, ctrl, alt)
+        if scan == 41 then enabled = false end
+        return false 
+    end
 end
 
 local function textinput(text)
