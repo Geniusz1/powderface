@@ -853,13 +853,15 @@ ui.slider = function(x, y, w, min_value, max_value, step, show_value, r, g, b)
     local slider = ui.box(x, y, w, 1, r, g, b)
     slider:set_border(r, g, b, 150)
     slider:set_backgroud(r, g, b)
-    slider.min_value = 0
-    slider.max_value = 0
+    slider.min_value = min_value or 0
+    slider.max_value = max_value or w
     slider.value = min_value
-    slider.show_value = show_value
+    slider.step = step or 1
+    slider.show_value = show_value or false
     local slider_x = slider.x
     slider:drawadd(function(self)
         -- the 'circle'
+        slider_x = self.x + self.w/(self.max_value - self.min_value)*self.value
         gfx.fillRect(slider_x - 2, self.y - 2, 5, 5, self.background.r, self.background.g, self.background.b)
         gfx.drawLine(slider_x - 1, self.y - 3, slider_x + 1, self.y - 3, self.background.r, self.background.g, self.background.b)
         gfx.drawLine(slider_x - 1, self.y + 3, slider_x + 1, self.y + 3, self.background.r, self.background.g, self.background.b)
@@ -868,20 +870,21 @@ ui.slider = function(x, y, w, min_value, max_value, step, show_value, r, g, b)
         -- that was the 'circle'
     end)
     function slider:set_value(value)
-        if value < 0 then value = 0 end
-        if value > 100 then value = 100 end
+        if value < self.min_value then value = self.min_value end
+        if value > self.max_value then value = self.max_value end
         self.value = value
     end
     function slider:set_min_max_value(min_value, max_value)
         self.min_value = min_value
         self.max_value = max_value
     end
+    function slider:set_step(value)
+        self.step = step
+    end
     function slider:mousemove(x, y, dx, dy)
         self.hover = ui.contains(x, y, self.x - 3, self.y - 3, self.x2 + 3, self.y2 + 3)
         if self.held then
-            slider_x = x
-            if slider_x < self.x then slider_x = self.x end
-            if slider_x > self.x2 then slider_x = self.x2 end
+            self:set_value(math.floor((x - self.x)/(self.w/(self.max_value - self.min_value))+0.5))
         end
         -- TODO automate event handling
     end
@@ -895,9 +898,19 @@ ui.slider = function(x, y, w, min_value, max_value, step, show_value, r, g, b)
         -- TODO automate event handling
     end
     function slider:mouseup(x, y, button, reason)
+        if self.held then
+            self:set_value(math.floor((x - self.x)/(self.w/(self.max_value - self.min_value))+0.5))
+        end
         self.held = false
     end
     function slider:mousewheel(x, y, d)
+        if self.hover then 
+            if d < 0 then
+                self:set_value(self.value - self.step)
+            else
+                self:set_value(self.value + self.step)
+            end
+        end
     end
     return slider
 end

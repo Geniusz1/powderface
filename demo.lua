@@ -46,8 +46,8 @@ local textscrollllllBox = ui.box(files.x2 + 6, radiob.y2 + 80, 110, textscrollll
 local progress = ui.progressbar(files.x2 + 10, radiob.y2 + 24, 200, 10, true)
 progress:set_progress(50)
 
-local slider = ui.slider(files.x2 + 10, radiob.y2 + 54, 200, 0, 10, 1)
-
+local slider = ui.slider(files.x2 + 10, radiob.y2 + 54, 100, 10, 120, 10)
+local value = ui.text(files.x2 - 20, radiob.y2 + 54, slider.value)
 
 rgroup:set_selected(1)
 textscrollllll:set_scroll_pos(4)
@@ -81,7 +81,8 @@ main:append(
     textscrollllll,
     textscrollllllBox,
     progress,
-    slider
+    slider,
+    value
 )
 
 window.draw_background = true
@@ -95,6 +96,7 @@ local function tick()
         button3:set_enabled(not check.checked)
         button3.label:set_text(check.checked and 'I\'m disabled :(' or 'I\'m enabled :D')
         files.draw_separator = check2.checked
+        value:set_text(slider.value)
     end
 end
 
