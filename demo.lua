@@ -46,7 +46,8 @@ local textscrollllllBox = ui.box(files.x2 + 6, radiob.y2 + 80, 110, textscrollll
 local progress = ui.progressbar(files.x2 + 10, radiob.y2 + 24, 200, 10, true)
 progress:set_progress(50)
 
-local slider = ui.slider(files.x2 + 10, radiob.y2 + 54, 100, 10, 120, 10)
+local slider = ui.slider(files.x2 + 10, radiob.y2 + 54, 100, -100, 100, 10)
+
 local value = ui.text(files.x2 - 20, radiob.y2 + 54, slider.value)
 
 rgroup:set_selected(1)
