@@ -114,10 +114,12 @@ ui.text = function(x, y, text, r, g, b, a)
         self.hover = ui.contains(x, y, self.x, self.y, self.x2, self.y2)
     end
 	function txt:set_color(r, g, b, a) 
-        self.color.r = r
-        self.color.g = g
-        self.color.b = b
-        self.color.a = a
+        self.color = {
+            r = r,
+            g = g,
+            b = b,
+            a = a
+        }
     end
     function txt:set_text(text) 
         self.text = text
@@ -168,10 +170,12 @@ ui.scroll_text = function(x, y, max_w, text, direction, r, g, b, a)
         table.insert(self.drawlist, f)
     end
 	function txt:set_color(r, g, b, a) 
-        self.color.r = r
-        self.color.g = g
-        self.color.b = b
-        self.color.a = a
+        self.color = {
+            r = r,
+            g = g,
+            b = b,
+            a = a
+        }
     end
     function txt:set_text(text) 
         self.text = text
@@ -328,7 +332,8 @@ ui.button = function(x, y, w, h, text, f, r, g, b)
     button.f = f
     button:set_border(r, g, b)
     button.label = ui.text(x + w/2 - tw/2, y + h/2 - th/2, text, r, g, b, a)
-    button.color = {r = r or 255, g = g or 255, b = b or 255},
+    button.color = {r = r or 255, g = g or 255, b = b or 255}
+    local last_clicked = {x = 0, y = 0}
     button:drawadd(function(self)
         local r, g, b = self.color.r, self.color.g, self.color.b
         if not self.enabled then 
@@ -373,8 +378,10 @@ ui.button = function(x, y, w, h, text, f, r, g, b)
             self.x2 = self.x2 - 1
             self.y2 = self.y2 + 1
             self.label.x = self.label.x - 1
-            self.label.y = self.label.y + 1
+            self.label.y = self.label.y + 1            
         end
+        last_clicked.x = x
+        last_clicked.y = y
     end
     function button:mouseup(x, y, button, reason)
         if self.held then
@@ -386,7 +393,7 @@ ui.button = function(x, y, w, h, text, f, r, g, b)
             self.label.x = self.label.x + 1
             self.label.y = self.label.y - 1
         end
-        if self.hover then
+        if self.hover and ui.contains(last_clicked.x, last_clicked.y, self.x, self.y, self.x2, self.y2) then
             self.f()
         end
     end
@@ -402,6 +409,7 @@ ui.checkbox = function(x, y, text, r, g, b)
     cb.held = false
     cb.color = {r = r or 255, g = g or 255, b = b or 255},
     cb:set_backgroud(r, g, b)
+    local last_clicked = {x = 0, y = 0}
     cb:drawadd(function (self)
         local r, g, b = self.color.r, self.color.g, self.color.b
         if not self.enabled then 
@@ -452,12 +460,14 @@ ui.checkbox = function(x, y, text, r, g, b)
     end
     function cb:mousedown(x, y, button)
         self.held = self.hover and self.enabled
+        last_clicked.x = x
+        last_clicked.y = y
     end
     function cb:mouseup(x, y, button, reason)
         if self.held then
             self.held = false
         end
-        if self.hover then
+        if self.hover and ui.contains(last_clicked.x, last_clicked.y, self.x, self.y, self.x2 + 6 + self.label.w, self.y2) then
             self.checked = not self.checked
             self.draw_background = not self.draw_background
         end
@@ -482,6 +492,7 @@ ui.radio_button = function(x, y, text, r, g, b, a)
         held = false,
         drawlist = {}
     }
+    local last_clicked = {x = 0, y = 0}
     function rb:draw()
         if self.visible then
             local r, g, b = self.color.r, self.color.g, self.color.b
@@ -536,17 +547,22 @@ ui.radio_button = function(x, y, text, r, g, b, a)
             self.label:set_color(100, 100, 100)
         end
     end
+    function rb:set_selected(selected)
+        self.selected = selected
+    end
     function rb:mousemove(x, y, dx, dy)
         self.hover = ui.contains(x, y, self.x, self.y, self.x2 + 6 + self.label.w, self.y2) and self.enabled
     end
     function rb:mousedown(x, y, button)
         self.held = self.hover and self.enabled
+        last_clicked.x = x
+        last_clicked.y = y
     end
     function rb:mouseup(x, y, button, reason)
         if self.held then
             self.held = false
         end
-        if self.hover then
+        if self.hover and ui.contains(last_clicked.x, last_clicked.y, self.x, self.y, self.x2 + 6 + self.label.w, self.y2) then
             self.selected = true
         end
     end
@@ -560,15 +576,16 @@ ui.radio_group = function(...)
         enabled = true,
         visible = true
     }
+    local last_clicked = {x = 0, y = 0}
     function rg:add_button(butt)
         table.insert(self.buttons, butt)
     end
     function rg:set_selected(n)
         self.selected = n
         for _, butt in ipairs(self.buttons) do
-            butt.selected = false
+            butt:set_selected(false)
         end
-        self.buttons[n].selected = true
+        self.buttons[n]:set_selected(true)
     end
     function rg:draw()
         if self.visible then
@@ -592,15 +609,17 @@ ui.radio_group = function(...)
         for _, butt in ipairs(self.buttons) do
             butt:mousedown(x, y, button)
         end
+        last_clicked.x = x
+        last_clicked.y = y
     end
     function rg:mouseup(x, y, button, reason)
         for i, butt in ipairs(self.buttons) do
             butt:mouseup(x, y, button, reason)
             if butt.hover then
                 self.selected = i
-                for _, other in ipairs(self.buttons) do
-                    if other ~= butt then
-                        other.selected = false
+                for _, butt2 in ipairs(self.buttons) do
+                    if butt2 ~= butt and ui.contains(last_clicked.x, last_clicked.y, butt.x, butt.y, butt.x2 + 6 + butt.label.w, butt.y2) then
+                        butt2:set_selected(false)
                     end
                 end
             end
@@ -627,6 +646,7 @@ ui.switch = function(x, y, text, r, g, b, colorful)
         held = false,
         drawlist = {}
     }
+    local last_clicked = {x = 0, y = 0}
     function sw:draw()
         if self.visible then
             local r, g, b = self.color.r, self.color.g, self.color.b
@@ -710,12 +730,14 @@ ui.switch = function(x, y, text, r, g, b, colorful)
     end
     function sw:mousedown(x, y, button)
         self.held = self.hover and self.enabled
+        last_clicked.x = x
+        last_clicked.y = y
     end
     function sw:mouseup(x, y, button, reason)
         if self.held then
             self.held = false
         end
-        if self.hover then
+        if self.hover and ui.contains(last_clicked.x, last_clicked.y, self.x, self.y, self.x2 + 6 + self.label.w, self.y2) then
             self.switched_on = not self.switched_on
         end
     end
@@ -856,8 +878,6 @@ ui.slider = function(x, y, w, min_value, max_value, step, show_value, r, g, b)
     end
     local slider = ui.box(x, y, w, 1, r, g, b)
     slider.color = {r = r or 255, g = g or 255, b = b or 255}
-    slider:set_border(r, g, b, 150)
-    slider:set_backgroud(r, g, b)
     slider.min_value = min_value or 0
     slider.max_value = max_value or w
     slider.value = min_value
@@ -894,6 +914,7 @@ ui.slider = function(x, y, w, min_value, max_value, step, show_value, r, g, b)
             b = b
         }
     end
+    slider:set_color(r, g, b)
     function slider:set_enabled(enabled)
         self.enabled = enabled
         if enabled then
