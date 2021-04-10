@@ -10,15 +10,17 @@ local window = ui.box(mx, my, mw, mh)
 
 local input = ui.inputbox(mx + 10, my + 10, 100, 0, 'This is an inputbox')
 
-local files = ui.list(mx + 10, my + 34, 100, 170)
+local files = ui.list(mx + 10, my + 34, 100, 175)
 
 local text = ui.text(input.x2 + 10, my + 14, 'Powderface v1.0, TPT user interface library made by Geniusz1', 0, 255, 0)
 local text2 = ui.text(input.x2 + 10, text.y2 + 10, 'This is a text')
 local text3 = ui.text(input.x2 + 10, text2.y2 + 10, 'This is also a text, but with a different color', 80, 150, 200)
 
 local button = ui.button(input.x2 + 10, text3.y2 + 10, 0, 0, 'Click me!', function() print('Yay!') end)
-local button2 = ui.button(button.x2 + 10, text3.y2 + 10, 80, 25, 'No, click ME!', function() print('Wooo!') end, 0, 255, 255)
+local button2 = ui.button(button.x2 + 10, text3.y2 + 10, 80, 25, 'I\'m fancy!', function() print('Wooo!') end, 0, 255, 255)
 local button3 = ui.button(button2.x2 + 10, text3.y2 + 10, 0, 0, 'I\'m disabled :(', function() print('Wooo!') end)
+local button4 = ui.flat_button(text2.x2 + 10, text.y2 + 5, 60, 20, 'I\'m flat', function() print('Flattered!') end)
+
 button3:set_enabled(false)
 
 local check = ui.checkbox(files.x2 + 10, button2.y2 + 10, 'Disable the button')
@@ -56,8 +58,9 @@ textscrollllll:set_scroll_pos(4)
 check:set_checked(true)
 
 files:append(ui.text(files.x, files.y, 'This is a list'))
+
 for i = 2, 24 do   
-    local item = ui.text(files.x, files.y, 'item '..i)
+    local item = ui.flat_button(files.x, files.y, 40, 15, 'butt '..i, function() print('item '..i..' clicked') end)
     files:append(item)
 end
 
@@ -71,6 +74,7 @@ main:append(
     button,
     button2,
     button3,
+    button4,
     check,
     check2,
     switch,
@@ -131,7 +135,6 @@ end
 
 local function keypress(key, scan, rep, shift, ctrl, alt)
     if enabled then
-        main:handle_event('mousewheel', x, y, d) 
         main:handle_event('keypress', key, scan, rep, shift, ctrl, alt)
         if scan == 41 then enabled = false end
         return false 

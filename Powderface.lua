@@ -83,6 +83,12 @@ ui.box = function(x, y, w, h, r, g, b, a, draw_background, draw_border)
         self.border.b = b
         self.border.a = a
     end
+    function box:set_position(x, y)
+        self.x = x
+        self.y = y
+        self.x2 = x + self.w - 1
+        self.y2 = y + self.h - 1
+    end
     return box
 end
 
@@ -124,6 +130,12 @@ ui.text = function(x, y, text, r, g, b, a)
     function txt:set_text(text) 
         self.text = text
         self.w, self.h = gfx.textSize(text)
+    end
+    function txt:set_position(x, y)
+        self.x = x
+        self.y = y
+        self.x2 = x + self.w
+        self.y2 = y + self.h
     end
 	return txt
 end
@@ -184,6 +196,12 @@ ui.scroll_text = function(x, y, max_w, text, direction, r, g, b, a)
     function txt:set_scroll_pos(pos) 
         self.scroll_pos = pos
     end
+    function txt:set_position(x, y)
+        self.x = x
+        self.y = y
+        self.x2 = x + self.w
+        self.y2 = y + self.h
+    end
 	return txt
 end
 
@@ -234,6 +252,14 @@ ui.inputbox = function(x, y, w, h, placeholder, r, g, b)
         }
         self:set_backgroud(r, g, b)
         self:set_border(r, g, b)
+    end
+    function ib:set_position(x, y)
+        self.x = x
+        self.y = y
+        self.x2 = x + self.w - 1
+        self.y2 = y + self.h - 1
+        self.placeholder:set_position(x + 4, y + self.h/2 - ph/2)
+        self.text:set_position(x + 4, y + self.h/2 - ph/2)
     end
     function ib:mousemove(x, y, dx, dy)
         self.hover = ui.contains(x, y, self.x, self.y, self.x2, self.y2)
@@ -329,7 +355,7 @@ ui.button = function(x, y, w, h, text, f, r, g, b)
     button.enabled = true
     button.hover = false
     button.held = false
-    button.f = f
+    button.f = f or function() end
     button:set_border(r, g, b)
     button.label = ui.text(x + w/2 - tw/2, y + h/2 - th/2, text, r, g, b, a)
     button.color = {r = r or 255, g = g or 255, b = b or 255}
@@ -367,18 +393,23 @@ ui.button = function(x, y, w, h, text, f, r, g, b)
             self:set_border(100, 100, 100)
         end
     end
+    function button:set_function(f)
+        self.f = f
+    end
+    function button:set_position(x, y)
+        self.x = x
+        self.y = y
+        self.x2 = x + self.w - 1
+        self.y2 = y + self.h - 1
+        self.label:set_position(x + self.w/2 - tw/2, y + self.h/2 - th/2)
+    end
     function button:mousemove(x, y, dx, dy)
         self.hover = ui.contains(x, y, self.x, self.y, self.x2, self.y2) and self.enabled
     end
     function button:mousedown(x, y, button)
         if self.hover then
             self.held = true
-            self.x = self.x - 1
-            self.y = self.y + 1
-            self.x2 = self.x2 - 1
-            self.y2 = self.y2 + 1
-            self.label.x = self.label.x - 1
-            self.label.y = self.label.y + 1            
+            self:set_position(self.x - 1, self.y + 1)         
         end
         last_clicked.x = x
         last_clicked.y = y
@@ -386,12 +417,77 @@ ui.button = function(x, y, w, h, text, f, r, g, b)
     function button:mouseup(x, y, button, reason)
         if self.held then
             self.held = false
-            self.x = self.x + 1
-            self.y = self.y - 1
-            self.x2 = self.x2 + 1
-            self.y2 = self.y2 - 1
-            self.label.x = self.label.x + 1
-            self.label.y = self.label.y - 1
+            self:set_position(self.x + 1, self.y - 1)
+        end
+        if self.hover and ui.contains(last_clicked.x, last_clicked.y, self.x, self.y, self.x2, self.y2) then
+            self.f()
+        end
+    end
+    return button
+end
+
+ui.flat_button = function(x, y, w, h, text, f)
+    local tw, th = gfx.textSize(text)
+    th = th - 4 -- for some reason it's 4 too many
+    if w == 0 then w = tw + 7 end
+    if h == 0 then h = th + 9 end
+    local button = ui.box(x, y, w, h)
+    button.enabled = true
+    button.hover = false
+    button.held = false
+    button.f = f or function() end
+    button.label = ui.text(x + w/2 - tw/2, y + h/2 - th/2, text)
+    button.color = {r = r or 255, g = g or 255, b = b or 255}
+    local last_clicked = {x = 0, y = 0}
+    button:drawadd(function(self)
+        if self.enabled and self.hover then
+            gfx.fillRect(self.x, self.y, self.w, self.h, 255, 255, 255, 50)
+        end
+        self.label:draw()
+        if self.held then
+            gfx.fillRect(self.x, self.y, self.w, self.h, self.color.r, self.color.g, self.color.b, 80)
+        end
+    end)
+    function button:set_color(r, g, b)
+        self.label:set_color(r, g, b)
+        self.color = {
+            r = r,
+            g = g,
+            b = b,
+        }
+        self:set_border(r, g, b)
+    end
+    function button:set_enabled(enabled)
+        self.enabled = enabled
+        if enabled then
+            self.label:set_color(self.color.r, self.color.g, self.color.b)
+        else
+            self.label:set_color(100, 100, 100)
+        end
+    end
+    function button:set_function(f)
+        self.f = f
+    end
+    function button:set_position(x, y)
+        self.x = x
+        self.y = y
+        self.x2 = x + self.w - 1
+        self.y2 = y + self.h - 1
+        self.label:set_position(x + w/2 - tw/2, y + h/2 - th/2)
+    end
+    function button:mousemove(x, y, dx, dy)
+        self.hover = ui.contains(x, y, self.x, self.y, self.x2, self.y2) and self.enabled
+    end
+    function button:mousedown(x, y, button)
+        if self.hover then
+            self.held = true
+        end
+        last_clicked.x = x
+        last_clicked.y = y
+    end
+    function button:mouseup(x, y, button, reason)
+        if self.held then
+            self.held = false
         end
         if self.hover and ui.contains(last_clicked.x, last_clicked.y, self.x, self.y, self.x2, self.y2) then
             self.f()
@@ -454,6 +550,13 @@ ui.checkbox = function(x, y, text, r, g, b)
     function cb:set_checked(checked)
         self.checked = checked
         self.draw_background = checked
+    end
+    function cb:set_position(x, y)
+        self.x = x
+        self.y = y
+        self.x2 = x + self.w - 1
+        self.y2 = y + self.h - 1
+        self.label:set_position(x + 14, y + 1)
     end
     function cb:mousemove(x, y, dx, dy)
         self.hover = ui.contains(x, y, self.x, self.y, self.x2 + 6 + self.label.w, self.y2) and self.enabled
@@ -550,6 +653,13 @@ ui.radio_button = function(x, y, text, r, g, b, a)
     function rb:set_selected(selected)
         self.selected = selected
     end
+    function rb:set_position(x, y)
+        self.x = x
+        self.y = y
+        self.x2 = x + 8
+        self.y2 = y + 8
+        self.label:set_position(x + 14, y + 1)
+    end
     function rb:mousemove(x, y, dx, dy)
         self.hover = ui.contains(x, y, self.x, self.y, self.x2 + 6 + self.label.w, self.y2) and self.enabled
     end
@@ -577,7 +687,7 @@ ui.radio_group = function(...)
         visible = true
     }
     local last_clicked = {x = 0, y = 0}
-    function rg:add_button(butt)
+    function rg:append(butt)
         table.insert(self.buttons, butt)
     end
     function rg:set_selected(n)
@@ -725,6 +835,13 @@ ui.switch = function(x, y, text, r, g, b, colorful)
             self.label:set_color(100, 100, 100)
         end
     end
+    function sw:set_position(x, y)
+        self.x = x
+        self.y = y
+        self.x2 = x + 14
+        self.y2 = y + 8
+        self.label:set_position(x + 20, y + 1)
+    end
     function sw:mousemove(x, y, dx, dy)
         self.hover = ui.contains(x, y, self.x, self.y, self.x2 + 6 + self.label.w, self.y2) and self.enabled
     end
@@ -754,25 +871,16 @@ ui.list = function(x, y, w, h, draw_separator, draw_scrollbar, r, g, b, a)
     list.draw_scrollbar = draw_scrollbar or true
     list.scrollbar_hover = false
     list.scrollbar_held = false
-    local max_visible_items = 1
+    local max_visible_items = 0
     list:drawadd(function(self)
         for i, item in ipairs(self.visible_items) do
-            item.y = self.y + item.h*(i - 1) + 4*(i - 1) + 4
-            item.y2 = item.y + item.h
-            item.x = self.x + 4
-            item.x2 = item.x + item.w
             item:draw()
+            -- TODO fix separators
             if self.draw_separator and i < #self.visible_items then
                 gfx.drawLine(self.x, item.y2, self.x2 - 5, item.y2 , self.border.r, self.border.g, self.border.b, self.border.a)
             end
         end
-        for i, item in ipairs(self.visible_items) do
-            if item.y2 <= self.y2 then
-                max_visible_items = i
-            end
-        end
-        
-        local pos = self.scrollbar_pos + max_visible_items - 1
+        pos = self.scrollbar_pos + max_visible_items - 1
         self.visible_items = {unpack(self.items, self.scrollbar_pos, pos)}
         local scrollbar_h = (max_visible_items / #self.items) * self.h
         local scrollbar_y = self.y + (self.h - scrollbar_h)/(#self.items - max_visible_items)*(self.scrollbar_pos - 1)
@@ -781,9 +889,31 @@ ui.list = function(x, y, w, h, draw_separator, draw_scrollbar, r, g, b, a)
             gfx.drawLine(self.x2 - 4, self.y + 1, self.x2 - 4, self.y2 - 1, self.border.r - 150, self.border.g - 150, self.border.b - 150)
         end
     end)
-    function list:append(item, pos)
+    function list:append(...)
+        for _, item in ipairs({...}) do
+            table.insert(self.items, item)
+        end
+        self:update_items_position()
+    end
+    function list:append_at(item, pos)
         table.insert(self.items, pos or #self.items + 1, item)
-        max_visible_items = max_visible_items + 1
+        self:update_items_position()
+    end
+    function list:update_items_position()
+        max_visible_items = 0
+        local height = self.y
+        for i, item in ipairs(self.items) do
+            if height + item.h + 4*(i - 1) + 4 < self.y2 then
+                height = height + item.h
+                max_visible_items = max_visible_items + 1
+            end
+        end        
+        pos = self.scrollbar_pos + max_visible_items - 1
+        self.visible_items = {unpack(self.items, self.scrollbar_pos, pos)}
+
+        for i, item in ipairs(self.visible_items) do
+            item:set_position(self.x + 4, self.y + item.h*(i - 1) + 4*(i - 1) + 4)
+        end
     end
     function list:mousemove(x, y, dx, dy)
         self.hover = ui.contains(x, y, self.x, self.y, self.x2, self.y2)
@@ -796,19 +926,24 @@ ui.list = function(x, y, w, h, draw_separator, draw_scrollbar, r, g, b, a)
                 diff = #self.items - max_visible_items + 1
             end
             self.scrollbar_pos = diff
+            self:update_items_position()
         end
-        for _, item in ipairs(self.items) do
-            if item['mousemove'] then
-                item:mousemove(x, y, dx, dy)
+        if not self.scrollbar_held then
+            for _, item in ipairs(self.visible_items) do
+                if item['mousemove'] then
+                    item:mousemove(x, y, dx, dy)
+                end
             end
         end
         -- TODO automate event handling
     end
-    function list:mousedown(x, y, button )
+    function list:mousedown(x, y, button)
         self.scrollbar_held = self.scrollbar_hover
-        for _, item in ipairs(self.items) do
-            if item['mousemove'] then
-                item:mousemove(x, y, dx, dy)
+        if not self.scrollbar_held then
+            for _, item in ipairs(self.visible_items) do
+                if item['mousedown'] then
+                    item:mousedown(x, y, button)
+                end
             end
         end
         -- TODO automate event handling
@@ -823,6 +958,14 @@ ui.list = function(x, y, w, h, draw_separator, draw_scrollbar, r, g, b, a)
                 diff = #self.items - max_visible_items + 1
             end
             self.scrollbar_pos = diff
+            self:update_items_position()
+        end
+        if not self.scrollbar_held then
+            for _, item in ipairs(self.visible_items) do
+                if item['mouseup'] then
+                    item:mouseup(x, y, button, reason)
+                end
+            end
         end
     end
     function list:mousewheel(x, y, d)
@@ -833,7 +976,25 @@ ui.list = function(x, y, w, h, draw_separator, draw_scrollbar, r, g, b, a)
             elseif #self.items - self.scrollbar_pos + 1 < #self.visible_items then
                 self.scrollbar_pos = self.scrollbar_pos + d
             end
-       end
+            self:update_items_position()
+        end
+        if not self.scrollbar_held then
+            for _, item in ipairs(self.visible_items) do
+                if item['mousewheel'] then
+                    item:mousewheel(x, y, d)
+                end
+                if item['mousemove'] then
+                    item:mousemove(x, y, 1, 1) -- when scrolling, item position is changed, hence hover and held need to be updated
+                end
+            end
+        end
+    end
+    function list:keypress(key, scan, rep, shift, ctrl, alt)
+        for _, item in ipairs(self.visible_items) do
+            if item['keypress'] then
+                item:keypress(key, scan, rep, shift, ctrl, alt)
+            end
+        end
     end
     return list
 end
