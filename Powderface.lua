@@ -153,26 +153,22 @@ ui.scroll_text = function(x, y, max_w, text, direction, r, g, b, a)
         drawlist = {}
     }
     txt.w, txt.h = gfx.textSize(text)
-    txt.real_x = x
+    txt.adjusted_x = x
     txt.max_w = max_w
-    txt.x2 = x + max_w - 1
-    txt.y2 = y + txt.h - 1 -- x2, y2 adjustment
-    local max_visible_chars = #text
+    txt.x2 = txt.x + max_w - 1
+    txt.y2 = txt.y + txt.h - 1 -- x2, y2 adjustment
+    txt.max_visible_chars = 1
     function txt:draw()
         if self.visible then
-            while tpt.textwidth(#self.text:sub(self.scroll_pos, self.scroll_pos + max_visible_chars)) > self.max_w do
-                max_visible_chars = #self.text:sub(self.scroll_pos, self.scroll_pos + max_visible_chars) - 1
-            end
-            self.real_x = self.x
-            -- gfx.drawLine(self.x, self.y-2, self.x2, self.y-2, 255, 0, 0)
+            self.adjusted_x = self.x
+            --gfx.drawLine(self.adjusted_x, self.y - 10, self.adjusted_x, self.y2 + 10, 255, 0, 0)
             if self.direction == 'right' then
-                if tpt.textwidth(self.text) > self.max_w then
-                    self.real_x = self.x2 - tpt.textwidth(self.visible_text)
-                end
+                self.adjusted_x = self.x2 - tpt.textwidth(self.visible_text)
             end
-            self.visible_text = self.text:sub(self.scroll_pos, self.scroll_pos + max_visible_chars)
-            
-            gfx.drawText(self.real_x, self.y, self.visible_text, self.color.r, self.color.g, self.color.b, self.color.a)
+            -- gfx.drawLine(self.adjusted_x, self.y - 10, self.adjusted_x, self.y2 + 10, 0, 255, 0)
+            -- gfx.drawLine(self.x2, self.y - 10, self.x2, self.y2 + 10, 0, 255, 0)
+            -- gfx.drawRect(self.x, self.y, self.max_w, self.h, 0, 255, 255)
+            gfx.drawText(self.adjusted_x, self.y, self.visible_text, self.color.r, self.color.g, self.color.b, self.color.a)
             for _, f in ipairs(self.drawlist) do
                 f(self)
             end
@@ -191,16 +187,39 @@ ui.scroll_text = function(x, y, max_w, text, direction, r, g, b, a)
     end
     function txt:set_text(text) 
         self.text = text
+        self:update_text()
+    end
+    function txt:update_text()
+        self.max_visible_chars = 1
+        for i = 1, #self.text do
+            if tpt.textwidth(self.text:sub(self.scroll_pos, self.scroll_pos + i)) < self.max_w then
+                self.max_visible_chars = self.max_visible_chars + 1
+            else
+                break
+            end
+        end
+        -- self.max_visible_chars = 20
+        self.visible_text = self.text:sub(self.scroll_pos, self.scroll_pos + self.max_visible_chars - 1)
     end
     txt:set_text(text)
-    function txt:set_scroll_pos(pos) 
-        self.scroll_pos = pos
+    function txt:set_scroll_pos(pos)
+        if pos > #self.text - #self.visible_text + 1 then
+            self.scroll_pos = #self.text - #self.visible_text + 1
+        elseif pos < 1 then
+            self.scroll_pos = 1
+        else
+            self.scroll_pos = pos
+        end
+        self:update_text()
+    end
+    function txt:set_direction(direction) 
+        self.direction = direction == 'right' and 'right' or 'left'
     end
     function txt:set_position(x, y)
         self.x = x
         self.y = y
-        self.x2 = x + self.w
-        self.y2 = y + self.h
+        self.x2 = x + self.max_w - 1
+        self.y2 = y + self.h - 1
     end
 	return txt
 end
@@ -212,7 +231,7 @@ ui.inputbox = function(x, y, w, h, placeholder, r, g, b)
     if h == 0 then h = ph + 9 end
     local ib = ui.box(x, y, w, h)
     ib.placeholder = ui.text(x + 4, y + h/2 - ph/2, placeholder, r, g, b, 100)
-    ib.text = ui.scroll_text(x + 4, y + h/2 - ph/2, w - 8, '', 'right', r, g, b)
+    ib.text = ui.scroll_text(x + 4, y + h/2 - ph/2, w - 8, '', 'left', r, g, b)
     ib.hover = false
     ib.held = false
     ib.focus = false
@@ -222,16 +241,23 @@ ui.inputbox = function(x, y, w, h, placeholder, r, g, b)
     ib.color = {r = r or 255, g = g or 255, b = b or 255},
     ib:set_backgroud(r, g, b)
     ib:drawadd(function (self)
-        local cursorx = tpt.textwidth(self.text.visible_text:sub(1, self.cursor)) + 5   
+        gfx.drawText(10, 10, self.text.text)
+        gfx.drawText(10, 25, self.text.visible_text)
+        if tpt.textwidth(self.text.text) > self.text.max_w then
+            self.text:set_direction('right')
+        else
+            self.text:set_direction('left')
+        end
+        local cursorx = tpt.textwidth(self.text.visible_text:sub(1, self.cursor - self.text.scroll_pos + 1))
         if self.hover and not self.focus then
             gfx.fillRect(self.x + 1, self.y + 1, self.w-2, self.h-2, self.color.r, self.color.g, self.color.b, 30)
         end
         if self.focus then
             gfx.fillRect(self.x + 1, self.y + 1, self.w-2, self.h-2, self.color.r, self.color.g, self.color.b, 30)
             if math.floor(socket.gettime()*2) % 2 == 0 and not self.cursor_moving then
-                gfx.drawLine(self.x + cursorx,self.y + 2,self.x + cursorx,self.y2-2, self.color.r, self.color.g, self.color.b)
+                gfx.drawLine(self.text.adjusted_x + cursorx, self.y + 2, self.text.adjusted_x + cursorx, self.y2-2, self.color.r, self.color.g, self.color.b)
             elseif self.cursor_moving then
-                gfx.drawLine(self.x + cursorx,self.y + 2,self.x + cursorx,self.y2-2, self.color.r, self.color.g, self.color.b)
+                gfx.drawLine(self.text.adjusted_x + cursorx, self.y + 2, self.text.adjusted_x + cursorx, self.y2-2, self.color.r, self.color.g, self.color.b)
             end
         end
         if #self.text.text ~= 0  then
@@ -282,6 +308,11 @@ ui.inputbox = function(x, y, w, h, placeholder, r, g, b)
 		self.cursor = self.cursor + amt
 		if self.cursor > #self.text.text then self.cursor = #self.text.text end
 		if self.cursor < 0 then self.cursor = 0 return end
+        if amt > 0 and self.cursor == self.text.scroll_pos + self.text.max_visible_chars then
+            self.text:set_scroll_pos(self.text.scroll_pos + 1)
+        elseif amt < 0 and self.cursor == self.text.scroll_pos - 1 then
+            self.text:set_scroll_pos(self.text.scroll_pos - 1)
+        end
 	end
     function ib:keypress(key, scan, rep, shift, ctrl, alt)
         local amt = 0
@@ -309,11 +340,13 @@ ui.inputbox = function(x, y, w, h, placeholder, r, g, b)
 			if self.cursor > 0 then
 				newstr = self.text.text:sub(1,self.cursor-1)..self.text.text:sub(self.cursor + 1)
 				amt = amt - 1
+                self.text:set_scroll_pos(self.text.scroll_pos - 1)
 			end
 		-- Delete
 		elseif scan == 76 then
 			newstr = self.text.text:sub(1,self.cursor)..self.text.text:sub(self.cursor + 2)
-		-- CTRL + C
+            self.text:set_scroll_pos(self.text.scroll_pos - 1)
+        -- CTRL + C
 		elseif scan == 6 and ctrl then
 			platform.clipboardPaste(self.text.text)
 		-- CTRL + V
@@ -321,13 +354,18 @@ ui.inputbox = function(x, y, w, h, placeholder, r, g, b)
 			local paste = platform.clipboardCopy()
 			newstr = self.text.text:sub(1, self.cursor)..paste..self.text.text:sub(self.cursor + 1)
 			amt = amt + #paste
+            self.text:set_scroll_pos(self.text.scroll_pos + #paste)
 		-- CTRL + X
 		elseif scan == 27 and ctrl then
 			platform.clipboardPaste(self.text.text)
+            newstr = ''
 			self.cursor = 0
 		end
         if newstr then
-			self.text:set_text(newstr) 
+			self.text:set_text(newstr)
+            if self.cursor == #self.text.text then
+                self.text:set_scroll_pos(self.text.scroll_pos + amt + 1)
+            end
 		end
         self:move_cursor(amt)
         return
@@ -336,10 +374,13 @@ ui.inputbox = function(x, y, w, h, placeholder, r, g, b)
         if not self.focus then
 			return
 		end
-        --if #text > 1 or string.byte(text) < 20 or string.byte(text) > 126 then return end
+        if #text > 1 or string.byte(text) < 20 or string.byte(text) > 126 then return end
         newstr = self.text.text:sub(1, self.cursor)..text..self.text.text:sub(self.cursor + 1)
         self.text:set_text(newstr)
         self:move_cursor(1)
+        if self.cursor == #self.text.text then
+            self.text:set_scroll_pos(#self.text.text)
+        end
         return
     end
     return ib
@@ -903,9 +944,11 @@ ui.list = function(x, y, w, h, draw_separator, draw_scrollbar, r, g, b, a)
         max_visible_items = 0
         local height = self.y
         for i, item in ipairs(self.items) do
-            if height + item.h + 4*(i - 1) + 4 < self.y2 then
+            if height + item.h + 4*(i - 1) + 3 < self.y2 then
                 height = height + item.h
                 max_visible_items = max_visible_items + 1
+            else
+                break
             end
         end        
         pos = self.scrollbar_pos + max_visible_items - 1

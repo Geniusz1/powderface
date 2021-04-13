@@ -42,8 +42,8 @@ local radiob2 = ui.radio_button(files.x2 + 150, radiob.y2 + 4, 'It\'s so user-fr
 local rgroup = ui.radio_group(radio, radio1, radio2, radio3)
 local rgroup2 = ui.radio_group(radiob, radiob2)
 
-local textscrollllll = ui.scroll_text(files.x2 + 100, radiob.y2 + 84, 100, 'This is it, it being not only a text box, yet also a scrolltext box', 'right')
-local textscrollllllBox = ui.box(files.x2 + 6, radiob.y2 + 80, 110, textscrollllll.h + 5)
+local textscrollllll = ui.scroll_text(files.x2 + 100, radiob.y2 + 84, 100, 'I needed to change thattext to something else, anyway.', 'right')
+local textscrollllllBox = ui.box(files.x2 + 100, radiob.y2 + 80, 100, textscrollllll.h + 5)
 
 local progress = ui.progressbar(files.x2 + 10, radiob.y2 + 24, 200, 10, true)
 progress:set_progress(50)
@@ -53,7 +53,7 @@ local slider = ui.slider(files.x2 + 10, radiob.y2 + 54, 100, -100, 100, 10)
 local value = ui.text(files.x2 - 20, radiob.y2 + 54, slider.value)
 
 rgroup:set_selected(1)
-textscrollllll:set_scroll_pos(4)
+textscrollllll:set_scroll_pos(12)
 
 check:set_checked(true)
 
@@ -128,7 +128,8 @@ end
 local function mousewheel(x, y, d)
     if enabled then
         main:handle_event('mousewheel', x, y, d)
-        return false  
+        textscrollllll:set_scroll_pos(textscrollllll.scroll_pos + d)
+        return false
     end
 end
 
