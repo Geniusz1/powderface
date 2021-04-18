@@ -161,13 +161,9 @@ ui.scroll_text = function(x, y, max_w, text, direction, r, g, b, a)
     function txt:draw()
         if self.visible then
             self.adjusted_x = self.x
-            --gfx.drawLine(self.adjusted_x, self.y - 10, self.adjusted_x, self.y2 + 10, 255, 0, 0)
             if self.direction == 'right' then
                 self.adjusted_x = self.x2 - tpt.textwidth(self.visible_text)
             end
-            -- gfx.drawLine(self.adjusted_x, self.y - 10, self.adjusted_x, self.y2 + 10, 0, 255, 0)
-            -- gfx.drawLine(self.x2, self.y - 10, self.x2, self.y2 + 10, 0, 255, 0)
-            -- gfx.drawRect(self.x, self.y, self.max_w, self.h, 0, 255, 255)
             gfx.drawText(self.adjusted_x, self.y, self.visible_text, self.color.r, self.color.g, self.color.b, self.color.a)
             for _, f in ipairs(self.drawlist) do
                 f(self)
@@ -190,15 +186,15 @@ ui.scroll_text = function(x, y, max_w, text, direction, r, g, b, a)
         self:update_text()
     end
     function txt:update_text()
-        self.max_visible_chars = 1
+        local temp_max_visible_chars = 1
         for i = 1, #self.text do
             if tpt.textwidth(self.text:sub(self.scroll_pos, self.scroll_pos + i)) < self.max_w then
-                self.max_visible_chars = self.max_visible_chars + 1
+                temp_max_visible_chars = temp_max_visible_chars + 1
             else
                 break
             end
         end
-        -- self.max_visible_chars = 20
+        self.max_visible_chars = temp_max_visible_chars
         self.visible_text = self.text:sub(self.scroll_pos, self.scroll_pos + self.max_visible_chars - 1)
     end
     txt:set_text(text)
@@ -241,8 +237,6 @@ ui.inputbox = function(x, y, w, h, placeholder, r, g, b)
     ib.color = {r = r or 255, g = g or 255, b = b or 255},
     ib:set_backgroud(r, g, b)
     ib:drawadd(function (self)
-        gfx.drawText(10, 10, self.text.text)
-        gfx.drawText(10, 25, self.text.visible_text)
         if tpt.textwidth(self.text.text) > self.text.max_w then
             self.text:set_direction('right')
         else
@@ -297,25 +291,22 @@ ui.inputbox = function(x, y, w, h, placeholder, r, g, b)
         end
     end
     function ib:mouseup(x, y, button, reason)
-        -- if self.held then
-        --     self.held = false
-        -- end
         if not self.hover then
             self.focus = false
         end
     end
     function ib:move_cursor(amt)
-		self.cursor = self.cursor + amt
-		if self.cursor > #self.text.text then self.cursor = #self.text.text end
-		if self.cursor < 0 then self.cursor = 0 return end
-        if amt > 0 and self.cursor == self.text.scroll_pos + self.text.max_visible_chars then
+		local temp_cursor = self.cursor + amt
+		if temp_cursor > #self.text.text then temp_cursor = #self.text.text end
+		if temp_cursor < 0 then temp_cursor = 0 return end
+        if amt > 0 and temp_cursor == self.text.scroll_pos + self.text.max_visible_chars then
             self.text:set_scroll_pos(self.text.scroll_pos + 1)
-        elseif amt < 0 and self.cursor == self.text.scroll_pos - 1 then
+        elseif amt < 0 and temp_cursor == self.text.scroll_pos - 2 then
             self.text:set_scroll_pos(self.text.scroll_pos - 1)
         end
+        self.cursor = temp_cursor
 	end
     function ib:keypress(key, scan, rep, shift, ctrl, alt)
-        local amt = 0
         -- Esc
 		if scan == 41 then
 			self.focus = false
@@ -324,27 +315,22 @@ ui.inputbox = function(x, y, w, h, placeholder, r, g, b)
 			self.focus = false
 		-- Right
 		elseif scan == 79 then
-			amt = amt + 1
             self.cursor_moving = true
-			--self.t:update(nil, self.cursor)
+            self:move_cursor(1)
 		-- Left
 		elseif scan == 80 then
-			amt = amt - 1
             self.cursor_moving = true
-			--self.t:update(nil, self.cursor)
-		end
-
-		local newstr
+			self:move_cursor(-1)
 		-- Backspace
-		if scan == 42 then
+        elseif scan == 42 then
 			if self.cursor > 0 then
-				newstr = self.text.text:sub(1,self.cursor-1)..self.text.text:sub(self.cursor + 1)
-				amt = amt - 1
+				self.text:set_text(self.text.text:sub(1,self.cursor-1)..self.text.text:sub(self.cursor + 1))
                 self.text:set_scroll_pos(self.text.scroll_pos - 1)
+                self:move_cursor(-1)
 			end
 		-- Delete
 		elseif scan == 76 then
-			newstr = self.text.text:sub(1,self.cursor)..self.text.text:sub(self.cursor + 2)
+            self.text:set_text(self.text.text:sub(1,self.cursor)..self.text.text:sub(self.cursor + 2))
             self.text:set_scroll_pos(self.text.scroll_pos - 1)
         -- CTRL + C
 		elseif scan == 6 and ctrl then
@@ -352,22 +338,15 @@ ui.inputbox = function(x, y, w, h, placeholder, r, g, b)
 		-- CTRL + V
 		elseif scan == 25 and ctrl then
 			local paste = platform.clipboardCopy()
-			newstr = self.text.text:sub(1, self.cursor)..paste..self.text.text:sub(self.cursor + 1)
-			amt = amt + #paste
+            self.text:set_text(self.text.text:sub(1, self.cursor)..paste..self.text.text:sub(self.cursor + 1))
             self.text:set_scroll_pos(self.text.scroll_pos + #paste)
+            self:move_cursor(#paste)
 		-- CTRL + X
 		elseif scan == 27 and ctrl then
 			platform.clipboardPaste(self.text.text)
-            newstr = ''
-			self.cursor = 0
+            self.text:set_text('')
+			self:move_cursor(-self.cursor)
 		end
-        if newstr then
-			self.text:set_text(newstr)
-            if self.cursor == #self.text.text then
-                self.text:set_scroll_pos(self.text.scroll_pos + amt + 1)
-            end
-		end
-        self:move_cursor(amt)
         return
     end
     function ib:textinput(text)
@@ -378,7 +357,7 @@ ui.inputbox = function(x, y, w, h, placeholder, r, g, b)
         newstr = self.text.text:sub(1, self.cursor)..text..self.text.text:sub(self.cursor + 1)
         self.text:set_text(newstr)
         self:move_cursor(1)
-        if self.cursor == #self.text.text then
+        if self.cursor >= #self.text.text then
             self.text:set_scroll_pos(#self.text.text)
         end
         return
@@ -902,7 +881,7 @@ ui.switch = function(x, y, text, r, g, b, colorful)
     return sw
 end
 
-ui.list = function(x, y, w, h, draw_separator, draw_scrollbar, r, g, b, a)
+ui.list = function(x, y, w, h, draw_separator, draw_scrollbar, padding, margin_between, r, g, b, a)
     local list = ui.box(x, y, w, h, r, g, b, a)
     list.items = {}
     list.visible_items = {}
@@ -912,13 +891,15 @@ ui.list = function(x, y, w, h, draw_separator, draw_scrollbar, r, g, b, a)
     list.draw_scrollbar = draw_scrollbar or true
     list.scrollbar_hover = false
     list.scrollbar_held = false
+    list.padding = padding or 3
+    list.margin_between = margin_between or 3
     local max_visible_items = 0
     list:drawadd(function(self)
         for i, item in ipairs(self.visible_items) do
             item:draw()
             -- TODO fix separators
             if self.draw_separator and i < #self.visible_items then
-                gfx.drawLine(self.x, item.y2, self.x2 - 5, item.y2 , self.border.r, self.border.g, self.border.b, self.border.a)
+                gfx.drawLine(self.x, item.y2 + 1 + self.margin_between/2, self.x2 - 5, item.y2 + 1 + self.margin_between/2, self.border.r, self.border.g, self.border.b, self.border.a)
             end
         end
         pos = self.scrollbar_pos + max_visible_items - 1
@@ -940,22 +921,34 @@ ui.list = function(x, y, w, h, draw_separator, draw_scrollbar, r, g, b, a)
         table.insert(self.items, pos or #self.items + 1, item)
         self:update_items_position()
     end
+    function list:set_padding(padding)
+        self.padding = padding or 3
+    end
+    function list:set_margin_between(margin_between)
+        self.margin_between = margin_between or 3
+    end
     function list:update_items_position()
         max_visible_items = 0
-        local height = self.y
+        local temp_self_x, temp_self_y = self.x, self.y
+        local last_item_y2 = 0
         for i, item in ipairs(self.items) do
-            if height + item.h + 4*(i - 1) + 3 < self.y2 then
-                height = height + item.h
+            if temp_self_y + last_item_y2 + self.margin_between + item.h --[[temp_y + item.h + 4*(i - 1) + 3]] < self.y2 then
+                last_item_y2 = last_item_y2 + self.margin_between + item.h
                 max_visible_items = max_visible_items + 1
             else
                 break
             end
-        end        
+        end     
         pos = self.scrollbar_pos + max_visible_items - 1
         self.visible_items = {unpack(self.items, self.scrollbar_pos, pos)}
-
+        local last_item_y2 = 0
         for i, item in ipairs(self.visible_items) do
-            item:set_position(self.x + 4, self.y + item.h*(i - 1) + 4*(i - 1) + 4)
+            local margin_top = self.margin_between
+            if i == 1 then
+                margin_top = self.padding + 1
+            end
+            item:set_position(temp_self_x + 1 + self.padding, temp_self_y + last_item_y2 + margin_top)
+            last_item_y2 = last_item_y2 + margin_top + item.h
         end
     end
     function list:mousemove(x, y, dx, dy)

@@ -10,7 +10,7 @@ local window = ui.box(mx, my, mw, mh)
 
 local input = ui.inputbox(mx + 10, my + 10, 100, 0, 'This is an inputbox')
 
-local files = ui.list(mx + 10, my + 34, 100, 175)
+local files = ui.list(mx + 10, my + 34, 100, 185)
 
 local text = ui.text(input.x2 + 10, my + 14, 'Powderface v1.0, TPT user interface library made by Geniusz1', 0, 255, 0)
 local text2 = ui.text(input.x2 + 10, text.y2 + 10, 'This is a text')
@@ -57,10 +57,10 @@ textscrollllll:set_scroll_pos(12)
 
 check:set_checked(true)
 
-files:append(ui.text(files.x, files.y, 'This is a list'))
+files:append(ui.flat_button(files.x, files.y, 0, 15, 'This is a list ', function() print('item 1 clicked') end))
 
 for i = 2, 24 do   
-    local item = ui.flat_button(files.x, files.y, 40, 15, 'butt '..i, function() print('item '..i..' clicked') end)
+    local item = ui.flat_button(files.x, files.y, 0, 15, 'butt '..i, function() print('item '..i..' clicked') end)
     files:append(item)
 end
 
