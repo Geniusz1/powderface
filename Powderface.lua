@@ -89,6 +89,12 @@ ui.box = function(x, y, w, h, r, g, b, a, draw_background, draw_border)
         self.x2 = x + self.w - 1
         self.y2 = y + self.h - 1
     end
+    function box:set_size(w, h)
+        self.w = x
+        self.h = h
+        self.x2 = self.x + w - 1
+        self.y2 = self.y2 + h - 1
+    end
     return box
 end
 
