@@ -37,6 +37,9 @@ ui.container = function()
             table.insert(self.children, child)
         end
     end
+    function c:append_at(child, pos)
+        table.insert(self.children, pos, child)
+    end
     return c
 end
 
