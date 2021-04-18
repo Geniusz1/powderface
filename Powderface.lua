@@ -374,7 +374,7 @@ ui.inputbox = function(x, y, w, h, placeholder, r, g, b)
     return ib
 end
 
-ui.button = function(x, y, w, h, text, f, r, g, b)
+ui.button = function(x, y, w, h, text, f, text_align, r, g, b)
     local tw, th = gfx.textSize(text)
     th = th - 4 -- for some reason it's 4 too many
     if w == 0 then w = tw + 7 end
@@ -384,6 +384,7 @@ ui.button = function(x, y, w, h, text, f, r, g, b)
     button.enabled = true
     button.hover = false
     button.held = false
+    button.text_align = text_align or 'center'
     button.f = f or function() end
     button:set_border(r, g, b)
     button.label = ui.text(x + w/2 - tw/2, y + h/2 - th/2, text, r, g, b, a)
@@ -425,12 +426,29 @@ ui.button = function(x, y, w, h, text, f, r, g, b)
     function button:set_function(f)
         self.f = f
     end
+    function button:set_text_align(text_align)
+        self.text_align = text_align
+        local tx = self.x + self.w/2 - self.label.w/2
+        if text_align == 'left' then
+            tx = self.x + 4
+        elseif text_align == 'right' then
+            tx = self.x2 - tpt.textwidth(self.label.text) - 4
+        end
+        self.label:set_position(tx, self.label.y)
+    end
+    button:set_text_align(text_align)
     function button:set_position(x, y)
         self.x = x
         self.y = y
         self.x2 = x + self.w - 1
         self.y2 = y + self.h - 1
-        self.label:set_position(x + self.w/2 - tw/2, y + self.h/2 - th/2)
+        local tx = self.x + self.w/2 - self.label.w/2
+        if self.text_align == 'left' then
+            tx = self.x + 4
+        elseif self.text_align == 'right' then
+            tx = self.x2 - tpt.textwidth(self.label.text) - 4
+        end
+        self.label:set_position(tx, y + self.h/2 - th/2)
     end
     function button:mousemove(x, y, dx, dy)
         self.hover = ui.contains(x, y, self.x, self.y, self.x2, self.y2) and self.enabled
@@ -455,7 +473,7 @@ ui.button = function(x, y, w, h, text, f, r, g, b)
     return button
 end
 
-ui.flat_button = function(x, y, w, h, text, f)
+ui.flat_button = function(x, y, w, h, text, f, text_align)
     local tw, th = gfx.textSize(text)
     th = th - 4 -- for some reason it's 4 too many
     if w == 0 then w = tw + 7 end
@@ -464,8 +482,9 @@ ui.flat_button = function(x, y, w, h, text, f)
     button.enabled = true
     button.hover = false
     button.held = false
+    button.text_align = text_align or 'center'
     button.f = f or function() end
-    button.label = ui.text(x + w/2 - tw/2, y + h/2 - th/2, text)
+    button.label = ui.text(x + w/2 - tw/2, y + h/2 - th/2, text, r, g, b, a)
     button.color = {r = r or 255, g = g or 255, b = b or 255}
     local last_clicked = {x = 0, y = 0}
     button:drawadd(function(self)
@@ -497,12 +516,29 @@ ui.flat_button = function(x, y, w, h, text, f)
     function button:set_function(f)
         self.f = f
     end
+    function button:set_text_align(text_align)
+        self.text_align = text_align
+        local tx = self.x + self.w/2 - self.label.w/2
+        if text_align == 'left' then
+            tx = self.x + 4
+        elseif text_align == 'right' then
+            tx = self.x2 - tpt.textwidth(self.label.text) - 4
+        end
+        self.label:set_position(tx, self.label.y)
+    end
+    button:set_text_align(text_align)
     function button:set_position(x, y)
         self.x = x
         self.y = y
         self.x2 = x + self.w - 1
         self.y2 = y + self.h - 1
-        self.label:set_position(x + w/2 - tw/2, y + h/2 - th/2)
+        local tx = self.x + self.w/2 - self.label.w/2
+        if self.text_align == 'left' then
+            tx = self.x + 4
+        elseif self.text_align == 'right' then
+            tx = self.x2 - tpt.textwidth(self.label.text) - 4
+        end
+        self.label:set_position(tx, y + self.h/2 - th/2)
     end
     function button:mousemove(x, y, dx, dy)
         self.hover = ui.contains(x, y, self.x, self.y, self.x2, self.y2) and self.enabled
