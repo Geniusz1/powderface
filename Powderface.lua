@@ -60,20 +60,22 @@ ui.box = function(x, y, w, h, r, g, b, a, draw_background, draw_border)
     }
     function box:draw()
         if self.visible then
-            if self.draw_background then
-                gfx.fillRect(self.x, self.y, self.w, self.h, self.background.r, self.background.g, self.background.b,  self.background.a)
-            end
-            if self.draw_border then
-                gfx.drawRect(self.x, self.y, self.w, self.h, self.border.r, self.border.g, self.border.b, self.border.a)
-            end
             for _, f in ipairs(self.drawlist) do
                 f(self)
             end
         end
     end
-    function box:drawadd(f)
-        table.insert(self.drawlist, f)
+    function box:drawadd(f, pos)
+        table.insert(self.drawlist, pos or 1, f)
     end
+    box:drawadd(function(self)
+        if self.draw_background then
+            gfx.fillRect(self.x, self.y, self.w, self.h, self.background.r, self.background.g, self.background.b,  self.background.a)
+        end
+        if self.draw_border then
+            gfx.drawRect(self.x, self.y, self.w, self.h, self.border.r, self.border.g, self.border.b, self.border.a)
+        end
+    end)
     function box:set_backgroud(r, g, b, a)
         self.background.r = r
         self.background.g = g
@@ -116,15 +118,17 @@ ui.text = function(x, y, text, r, g, b, a)
     txt.y2 = y + txt.h
     function txt:draw()
         if self.visible then
-            gfx.drawText(self.x, self.y, self.text, self.color.r, self.color.g, self.color.b, self.color.a)
             for _, f in ipairs(self.drawlist) do
                 f(self)
             end
         end
     end
-    function txt:drawadd(f)
-        table.insert(self.drawlist, f)
+    function txt:drawadd(f, pos)
+        table.insert(self.drawlist, pos or 1, f)
     end
+    txt:drawadd(function(self)
+        gfx.drawText(self.x, self.y, self.text, self.color.r, self.color.g, self.color.b, self.color.a)
+    end)
     function txt:mousemove(x, y, dx, dy)
         self.hover = ui.contains(x, y, self.x, self.y, self.x2, self.y2)
     end
@@ -169,19 +173,21 @@ ui.scroll_text = function(x, y, max_w, text, direction, r, g, b, a)
     txt.max_visible_chars = 1
     function txt:draw()
         if self.visible then
-            self.adjusted_x = self.x
-            if self.direction == 'right' then
-                self.adjusted_x = self.x2 - tpt.textwidth(self.visible_text)
-            end
-            gfx.drawText(self.adjusted_x, self.y, self.visible_text, self.color.r, self.color.g, self.color.b, self.color.a)
             for _, f in ipairs(self.drawlist) do
                 f(self)
             end
         end
     end
-    function txt:drawadd(f)
-        table.insert(self.drawlist, f)
+    function txt:drawadd(f, pos)
+        table.insert(self.drawlist, pos or 1, f)
     end
+    txt:drawadd(function(self)
+        self.adjusted_x = self.x
+        if self.direction == 'right' then
+            self.adjusted_x = self.x2 - tpt.textwidth(self.visible_text)
+        end
+        gfx.drawText(self.adjusted_x, self.y, self.visible_text, self.color.r, self.color.g, self.color.b, self.color.a)
+    end)
 	function txt:set_color(r, g, b, a) 
         self.color = {
             r = r,
@@ -245,7 +251,7 @@ ui.inputbox = function(x, y, w, h, placeholder, r, g, b)
     ib.visible_cursor = 0
     ib.color = {r = r or 255, g = g or 255, b = b or 255},
     ib:set_backgroud(r, g, b)
-    ib:drawadd(function (self)
+    ib:drawadd(function(self)
         if tpt.textwidth(self.text.text) > self.text.max_w then
             self.text:set_direction('right')
         else
@@ -663,42 +669,44 @@ ui.radio_button = function(x, y, text, r, g, b, a)
     local last_clicked = {x = 0, y = 0}
     function rb:draw()
         if self.visible then
-            local r, g, b = self.color.r, self.color.g, self.color.b
-            if not self.enabled then 
-                r, g, b = 100, 100, 100
-            end
-            if self.hover then
-                gfx.fillRect(self.x2 + 4, self.y - 1, self.label.w + 3, 11, self.color.r, self.color.g, self.color.b, 50)
-            end
-            if self.selected then
-                gfx.fillRect(self.x + 2, self.y + 2, 5, 5, r, g, b)
-                gfx.drawPixel(self.x + 2, self.y + 2, 0, 0, 0) -- top left
-                gfx.drawPixel(self.x + 2, self.y2 - 2, 0, 0, 0) -- bottom left
-                gfx.drawPixel(self.x2 - 2, self.y + 2, 0, 0, 0) -- top right
-                gfx.drawPixel(self.x2 - 2, self.y2 - 2, 0, 0, 0) -- bottom right
-            end
-            if self.held then
-                gfx.fillRect(self.x + 1, self.y + 1, 7, 7, self.color.r, self.color.g, self.color.b)
-            end
-            -- the 'circle'
-            gfx.drawLine(self.x, self.y + 2, self.x, self.y2 - 2, r, g, b)
-            gfx.drawLine(self.x2, self.y + 2, self.x2, self.y2 - 2, r, g, b)
-            gfx.drawLine(self.x + 2, self.y, self.x2 - 2, self.y, r, g, b)
-            gfx.drawLine(self.x + 2, self.y2, self.x2 - 2, self.y2, r, g, b)
-            gfx.drawPixel(self.x + 1, self.y + 1, r, g, b)
-            gfx.drawPixel(self.x + 1, self.y2 - 1, r, g, b)
-            gfx.drawPixel(self.x2 - 1, self.y + 1, r, g, b)
-            gfx.drawPixel(self.x2 - 1, self.y2 - 1, r, g, b)
-            -- that was the 'circle'
-            self.label:draw()
             for _, f in ipairs(self.drawlist) do
                 f(self)
             end
         end
     end
-    function rb:drawadd(f)
-        table.insert(self.drawlist, f)
+    function rb:drawadd(f, pos)
+        table.insert(self.drawlist, pos or 1, f)
     end
+    rb:drawadd(function(self)
+        local r, g, b = self.color.r, self.color.g, self.color.b
+        if not self.enabled then 
+            r, g, b = 100, 100, 100
+        end
+        if self.hover then
+            gfx.fillRect(self.x2 + 4, self.y - 1, self.label.w + 3, 11, self.color.r, self.color.g, self.color.b, 50)
+        end
+        if self.selected then
+            gfx.fillRect(self.x + 2, self.y + 2, 5, 5, r, g, b)
+            gfx.drawPixel(self.x + 2, self.y + 2, 0, 0, 0) -- top left
+            gfx.drawPixel(self.x + 2, self.y2 - 2, 0, 0, 0) -- bottom left
+            gfx.drawPixel(self.x2 - 2, self.y + 2, 0, 0, 0) -- top right
+            gfx.drawPixel(self.x2 - 2, self.y2 - 2, 0, 0, 0) -- bottom right
+        end
+        if self.held then
+            gfx.fillRect(self.x + 1, self.y + 1, 7, 7, self.color.r, self.color.g, self.color.b)
+        end
+        -- the 'circle'
+        gfx.drawLine(self.x, self.y + 2, self.x, self.y2 - 2, r, g, b)
+        gfx.drawLine(self.x2, self.y + 2, self.x2, self.y2 - 2, r, g, b)
+        gfx.drawLine(self.x + 2, self.y, self.x2 - 2, self.y, r, g, b)
+        gfx.drawLine(self.x + 2, self.y2, self.x2 - 2, self.y2, r, g, b)
+        gfx.drawPixel(self.x + 1, self.y + 1, r, g, b)
+        gfx.drawPixel(self.x + 1, self.y2 - 1, r, g, b)
+        gfx.drawPixel(self.x2 - 1, self.y + 1, r, g, b)
+        gfx.drawPixel(self.x2 - 1, self.y2 - 1, r, g, b)
+        -- that was the 'circle'
+        self.label:draw()
+    end)
     function rb:set_color(r, g, b)
         self.label:set_color(r, g, b)
         self.color = {
@@ -824,66 +832,68 @@ ui.switch = function(x, y, text, r, g, b, colorful)
     local last_clicked = {x = 0, y = 0}
     function sw:draw()
         if self.visible then
-            local r, g, b = self.color.r, self.color.g, self.color.b
-            if self.switched_on then 
-                if self.colorful then
-                    r, g, b = 0, 255, 0
-                end
-            else
-                r, g, b = self.color.r - 100, self.color.g - 100, self.color.b - 100
-                if self.colorful then
-                    r, g, b = 255, 0, 0
-                end
-            end
-            if not self.enabled then 
-                r, g, b = 100, 100, 100
-            end
-            if self.hover then
-                gfx.fillRect(self.x2 + 4, self.y - 1, self.label.w + 3, 11, self.color.r, self.color.g, self.color.b, 50)
-            end
-            
-            if self.switched_on then
-                gfx.fillRect(self.x + 8, self.y + 2, 5, 5, r, g, b)
-                gfx.drawPixel(self.x + 8, self.y + 2, 0, 0, 0) -- top left
-                gfx.drawPixel(self.x + 8, self.y2 - 2, 0, 0, 0) -- bottom left
-                gfx.drawPixel(self.x + 12, self.y + 2, 0, 0, 0) -- top right
-                gfx.drawPixel(self.x + 12, self.y2 - 2, 0, 0, 0) -- bottom right
-            else 
-                gfx.fillRect(self.x + 2, self.y + 2, 5, 5, r, g, b)
-                gfx.drawPixel(self.x + 2, self.y + 2, 0, 0, 0) -- top left
-                gfx.drawPixel(self.x + 2, self.y2 - 2, 0, 0, 0) -- bottom left
-                gfx.drawPixel(self.x + 6, self.y + 2, 0, 0, 0) -- top right
-                gfx.drawPixel(self.x + 6, self.y2 - 2, 0, 0, 0) -- bottom right
-            end
-            if self.held then
-                gfx.fillRect(self.x + 5, self.y + 2, 5, 5, r, g, b)
-                if self.switched_on then 
-                    gfx.drawPixel(self.x + 5, self.y + 2, 0, 0, 0) -- top left
-                    gfx.drawPixel(self.x + 5, self.y2 - 2, 0, 0, 0) -- bottom left
-                else
-                    gfx.drawPixel(self.x + 9, self.y + 2, 0, 0, 0) -- top right
-                    gfx.drawPixel(self.x + 9, self.y2 - 2, 0, 0, 0) -- bottom right
-                end
-            end
-            -- the 'circle'
-            gfx.drawLine(self.x, self.y + 2, self.x, self.y2 - 2, r, g, b) -- left
-            gfx.drawLine(self.x2, self.y + 2, self.x2, self.y2 - 2, r, g, b) -- right
-            gfx.drawLine(self.x + 2, self.y, self.x2 - 2, self.y, r, g, b) -- top
-            gfx.drawLine(self.x + 2, self.y2, self.x2 - 2, self.y2, r, g, b) -- bottom
-            gfx.drawPixel(self.x + 1, self.y + 1, r, g, b) -- top left
-            gfx.drawPixel(self.x + 1, self.y2 - 1, r, g, b) -- bottom left
-            gfx.drawPixel(self.x2 - 1, self.y + 1, r, g, b) -- top right
-            gfx.drawPixel(self.x2 - 1, self.y2 - 1, r, g, b) -- bottom right
-            -- that was the 'circle'
-            self.label:draw()
             for _, f in ipairs(self.drawlist) do
                 f(self)
             end
         end
     end
-    function sw:drawadd(f)
-        table.insert(self.drawlist, f)
+    function sw:drawadd(f, pos)
+        table.insert(self.drawlist, pos, f)
     end
+    sw:drawadd(function(self)
+        local r, g, b = self.color.r, self.color.g, self.color.b
+        if self.switched_on then 
+            if self.colorful then
+                r, g, b = 0, 255, 0
+            end
+        else
+            r, g, b = self.color.r - 100, self.color.g - 100, self.color.b - 100
+            if self.colorful then
+                r, g, b = 255, 0, 0
+            end
+        end
+        if not self.enabled then 
+            r, g, b = 100, 100, 100
+        end
+        if self.hover then
+            gfx.fillRect(self.x2 + 4, self.y - 1, self.label.w + 3, 11, self.color.r, self.color.g, self.color.b, 50)
+        end
+        
+        if self.switched_on then
+            gfx.fillRect(self.x + 8, self.y + 2, 5, 5, r, g, b)
+            gfx.drawPixel(self.x + 8, self.y + 2, 0, 0, 0) -- top left
+            gfx.drawPixel(self.x + 8, self.y2 - 2, 0, 0, 0) -- bottom left
+            gfx.drawPixel(self.x + 12, self.y + 2, 0, 0, 0) -- top right
+            gfx.drawPixel(self.x + 12, self.y2 - 2, 0, 0, 0) -- bottom right
+        else 
+            gfx.fillRect(self.x + 2, self.y + 2, 5, 5, r, g, b)
+            gfx.drawPixel(self.x + 2, self.y + 2, 0, 0, 0) -- top left
+            gfx.drawPixel(self.x + 2, self.y2 - 2, 0, 0, 0) -- bottom left
+            gfx.drawPixel(self.x + 6, self.y + 2, 0, 0, 0) -- top right
+            gfx.drawPixel(self.x + 6, self.y2 - 2, 0, 0, 0) -- bottom right
+        end
+        if self.held then
+            gfx.fillRect(self.x + 5, self.y + 2, 5, 5, r, g, b)
+            if self.switched_on then 
+                gfx.drawPixel(self.x + 5, self.y + 2, 0, 0, 0) -- top left
+                gfx.drawPixel(self.x + 5, self.y2 - 2, 0, 0, 0) -- bottom left
+            else
+                gfx.drawPixel(self.x + 9, self.y + 2, 0, 0, 0) -- top right
+                gfx.drawPixel(self.x + 9, self.y2 - 2, 0, 0, 0) -- bottom right
+            end
+        end
+        -- the 'circle'
+        gfx.drawLine(self.x, self.y + 2, self.x, self.y2 - 2, r, g, b) -- left
+        gfx.drawLine(self.x2, self.y + 2, self.x2, self.y2 - 2, r, g, b) -- right
+        gfx.drawLine(self.x + 2, self.y, self.x2 - 2, self.y, r, g, b) -- top
+        gfx.drawLine(self.x + 2, self.y2, self.x2 - 2, self.y2, r, g, b) -- bottom
+        gfx.drawPixel(self.x + 1, self.y + 1, r, g, b) -- top left
+        gfx.drawPixel(self.x + 1, self.y2 - 1, r, g, b) -- bottom left
+        gfx.drawPixel(self.x2 - 1, self.y + 1, r, g, b) -- top right
+        gfx.drawPixel(self.x2 - 1, self.y2 - 1, r, g, b) -- bottom right
+        -- that was the 'circle'
+        self.label:draw()
+    end)
     function sw:set_color(r, g, b)
         self.label:set_color(r, g, b)
         self.color = {
