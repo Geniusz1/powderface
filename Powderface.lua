@@ -838,7 +838,7 @@ ui.switch = function(x, y, text, r, g, b, colorful)
         end
     end
     function sw:drawadd(f, pos)
-        table.insert(self.drawlist, pos, f)
+        table.insert(self.drawlist, pos or 1, f)
     end
     sw:drawadd(function(self)
         local r, g, b = self.color.r, self.color.g, self.color.b
