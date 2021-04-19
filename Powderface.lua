@@ -66,7 +66,11 @@ ui.box = function(x, y, w, h, r, g, b, a, draw_background, draw_border)
         end
     end
     function box:drawadd(f, pos)
-        table.insert(self.drawlist, pos or 1, f)
+        if pos then
+            table.insert(self.drawlist, pos, f)
+        else
+            table.insert(self.drawlist, f)
+        end
     end
     box:drawadd(function(self)
         if self.draw_background then
@@ -124,7 +128,11 @@ ui.text = function(x, y, text, r, g, b, a)
         end
     end
     function txt:drawadd(f, pos)
-        table.insert(self.drawlist, pos or 1, f)
+        if pos then
+            table.insert(self.drawlist, pos, f)
+        else
+            table.insert(self.drawlist, f)
+        end
     end
     txt:drawadd(function(self)
         gfx.drawText(self.x, self.y, self.text, self.color.r, self.color.g, self.color.b, self.color.a)
@@ -179,7 +187,11 @@ ui.scroll_text = function(x, y, max_w, text, direction, r, g, b, a)
         end
     end
     function txt:drawadd(f, pos)
-        table.insert(self.drawlist, pos or 1, f)
+        if pos then
+            table.insert(self.drawlist, pos, f)
+        else
+            table.insert(self.drawlist, f)
+        end
     end
     txt:drawadd(function(self)
         self.adjusted_x = self.x
@@ -675,7 +687,11 @@ ui.radio_button = function(x, y, text, r, g, b, a)
         end
     end
     function rb:drawadd(f, pos)
-        table.insert(self.drawlist, pos or 1, f)
+        if pos then
+            table.insert(self.drawlist, pos, f)
+        else
+            table.insert(self.drawlist, f)
+        end
     end
     rb:drawadd(function(self)
         local r, g, b = self.color.r, self.color.g, self.color.b
@@ -838,7 +854,11 @@ ui.switch = function(x, y, text, r, g, b, colorful)
         end
     end
     function sw:drawadd(f, pos)
-        table.insert(self.drawlist, pos or 1, f)
+        if pos then
+            table.insert(self.drawlist, pos, f)
+        else
+            table.insert(self.drawlist, f)
+        end
     end
     sw:drawadd(function(self)
         local r, g, b = self.color.r, self.color.g, self.color.b
