@@ -1002,6 +1002,9 @@ ui.list = function(x, y, w, h, draw_separator, draw_scrollbar, padding, margin_b
     function list:set_margin_between(margin_between)
         self.margin_between = margin_between or 3
     end
+    function list:get_max_visible_items()
+        return max_visible_items
+    end
     function list:update_items_position()
         max_visible_items = 0
         local temp_self_x, temp_self_y = self.x, self.y
