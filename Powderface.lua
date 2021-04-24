@@ -178,7 +178,7 @@ ui.scroll_text = function(x, y, max_w, text, direction, r, g, b, a)
     txt.max_w = max_w
     txt.x2 = txt.x + max_w - 1
     txt.y2 = txt.y + txt.h - 1 -- x2, y2 adjustment
-    txt.max_visible_chars = 1
+    max_visible_chars = 1
     function txt:draw()
         if self.visible then
             for _, f in ipairs(self.drawlist) do
@@ -208,9 +208,8 @@ ui.scroll_text = function(x, y, max_w, text, direction, r, g, b, a)
             a = a
         }
     end
-    function txt:set_text(text) 
-        self.text = text
-        self:update_text()
+    function txt:get_max_visible_chars() 
+        return max_visible_chars
     end
     function txt:update_text()
         local temp_max_visible_chars = 1
@@ -221,10 +220,9 @@ ui.scroll_text = function(x, y, max_w, text, direction, r, g, b, a)
                 break
             end
         end
-        self.max_visible_chars = temp_max_visible_chars
-        self.visible_text = self.text:sub(self.scroll_pos, self.scroll_pos + self.max_visible_chars - 1)
+        max_visible_chars = temp_max_visible_chars
+        self.visible_text = self.text:sub(self.scroll_pos, self.scroll_pos + max_visible_chars - 1)
     end
-    txt:set_text(text)
     function txt:set_scroll_pos(pos)
         if pos > #self.text - #self.visible_text + 1 then
             self.scroll_pos = #self.text - #self.visible_text + 1
@@ -235,6 +233,11 @@ ui.scroll_text = function(x, y, max_w, text, direction, r, g, b, a)
         end
         self:update_text()
     end
+    function txt:set_text(text)
+        self.text = text
+        self:set_scroll_pos(#text)
+    end
+    txt:set_text(text)
     function txt:set_direction(direction) 
         self.direction = direction == 'right' and 'right' or 'left'
     end
