@@ -99,10 +99,10 @@ ui.box = function(x, y, w, h, r, g, b, a, draw_background, draw_border)
         self.y2 = y + self.h - 1
     end
     function box:set_size(w, h)
-        self.w = x
+        self.w = w
         self.h = h
         self.x2 = self.x + w - 1
-        self.y2 = self.y2 + h - 1
+        self.y2 = self.y + h - 1
     end
     return box
 end
@@ -155,8 +155,8 @@ ui.text = function(x, y, text, r, g, b, a)
     function txt:set_position(x, y)
         self.x = x
         self.y = y
-        self.x2 = x + self.w
-        self.y2 = y + self.h
+        self.x2 = x + self.w - 1
+        self.y2 = y + self.h - 1
     end
 	return txt
 end
