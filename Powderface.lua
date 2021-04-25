@@ -115,7 +115,8 @@ ui.text = function(x, y, text, r, g, b, a)
         visible = true,
         color = {r = r or 255, g = g or 255, b = b or 255, a = a or 255},
         drawlist = {},
-        hover = false
+        hover = false,
+        held = false
     }
     txt.w, txt.h = gfx.textSize(text)
     txt.x2 = x + txt.w
@@ -139,6 +140,9 @@ ui.text = function(x, y, text, r, g, b, a)
     end)
     function txt:mousemove(x, y, dx, dy)
         self.hover = ui.contains(x, y, self.x, self.y, self.x2, self.y2)
+    end
+    function txt:mousedown(x, y, button)
+        self.held = self.hover
     end
 	function txt:set_color(r, g, b, a) 
         self.color = {
@@ -171,7 +175,9 @@ ui.scroll_text = function(x, y, max_w, text, direction, r, g, b, a)
         direction = direction or 'left',
         color = {r = r or 255, g = g or 255, b = b or 255, a = a or 255},
         scroll_pos = 1,
-        drawlist = {}
+        drawlist = {},
+        hover = false,
+        held = false
     }
     txt.w, txt.h = gfx.textSize(text)
     txt.adjusted_x = x
@@ -233,9 +239,15 @@ ui.scroll_text = function(x, y, max_w, text, direction, r, g, b, a)
         end
         self:update_text()
     end
+    function txt:mousemove(x, y, dx, dy)
+        self.hover = ui.contains(x, y, self.x, self.y, self.x2, self.y2)
+    end
+    function txt:mousedown(x, y, button)
+        self.held = self.hover
+    end
     function txt:set_text(text)
         self.text = text
-        self:set_scroll_pos(#text)
+        self:update_text()
     end
     txt:set_text(text)
     function txt:set_direction(direction) 
@@ -329,7 +341,7 @@ ui.inputbox = function(x, y, w, h, placeholder, r, g, b)
 		local temp_cursor = self.cursor + amt
 		if temp_cursor > #self.text.text then temp_cursor = #self.text.text end
 		if temp_cursor < 0 then temp_cursor = 0 return end
-        if amt > 0 and temp_cursor == self.text.scroll_pos + self.text.max_visible_chars then
+        if amt > 0 and temp_cursor == self.text.scroll_pos + self.text:get_max_visible_chars() then
             self.text:set_scroll_pos(self.text.scroll_pos + 1)
         elseif amt < 0 and temp_cursor == self.text.scroll_pos - 2 then
             self.text:set_scroll_pos(self.text.scroll_pos - 1)
@@ -401,7 +413,7 @@ ui.button = function(x, y, w, h, text, f, text_align, r, g, b)
     if w == 0 then w = tw + 7 end
     if h == 0 then h = th + 9 end
     x, y = x - 1, y - 1
-    local button = ui.box(x, y, w, h, r, g, b, a)
+    local button = ui.box(x, y, w, h, r, g, b)
     button.enabled = true
     button.hover = false
     button.held = false
@@ -494,12 +506,12 @@ ui.button = function(x, y, w, h, text, f, text_align, r, g, b)
     return button
 end
 
-ui.flat_button = function(x, y, w, h, text, f, text_align)
+ui.flat_button = function(x, y, w, h, text, f, text_align, r, g, b)
     local tw, th = gfx.textSize(text)
     th = th - 4 -- for some reason it's 4 too many
     if w == 0 then w = tw + 7 end
     if h == 0 then h = th + 9 end
-    local button = ui.box(x, y, w, h)
+    local button = ui.box(x, y, w, h, r, g, b)
     button.enabled = true
     button.hover = false
     button.held = false
