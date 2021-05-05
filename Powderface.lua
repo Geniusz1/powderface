@@ -7,7 +7,7 @@
 
 require('socket')
 
-ui = {}
+local ui = {}
 
 ui.contains = function(x, y, a1, b1, a2, b2)
     return not (x < a1 or x > a2 or y < b1 or y > b2)
