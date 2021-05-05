@@ -18,17 +18,27 @@ gfx.drawPixel = function(x, y, r, g, b, a)
 end
 
 ui.container = function()
-    local c = {}
-    c.children = {}
+    local c = {
+        children = {},
+        grabbers = {}
+    }
     function c:draw()
         for _, child in ipairs(self.children) do
             child:draw()
+        end
+        for _, grabber in ipairs(self.grabbers) do
+            grabber:draw()
         end
     end
     function c:handle_event(evt, ...)
         for _, child in ipairs(self.children) do
             if child[evt] then
                 child[evt](child, ...)
+            end
+        end
+        for _, grabber in ipairs(self.grabbers) do
+            if grabber[evt] then
+                grabber[evt](grabber, self, ...)
             end
         end
     end
@@ -40,7 +50,58 @@ ui.container = function()
     function c:append_at(child, pos)
         table.insert(self.children, pos, child)
     end
+    function c:append_grabber(...)
+        for _, grabber in ipairs({...}) do
+            table.insert(self.grabbers, grabber)
+        end
+    end
+    function c:append_grabber_at(grabber, pos)
+        table.insert(self.grabbers, pos, grabber)
+    end
     return c
+end
+
+ui.grabber = function(x1, y1, x2, y2, draw_scope)
+    local g = {
+        scope = {
+            x1 = x1,
+            y1 = y1,
+            x2 = x2,
+            y2 = y2
+        },
+        hover = false,
+        held = false,
+        draw_scope = draw_scope or false
+    }
+    function g:draw()
+        if draw_scope then
+            gfx.drawRect(self.scope.x1, self.scope.y1, self.scope.x2 - self.scope.x1, self.scope.y2 - self.scope.y1)
+        end
+    end
+    function g:set_scope(x1, y1, x2, y2)
+        self.scope = {
+            x1 = x1,
+            y1 = y1,
+            x2 = x2,
+            y2 = y2
+        }
+    end
+    function g:mouseup(parent_container, x, y, button, reason)
+        self.held = false
+    end
+    function g:mousemove(parent_container, x, y, dx, dy)
+        self.hover = ui.contains(x, y, self.scope.x1, self.scope.y1, self.scope.x2, self.scope.y2)
+        if self.held then
+            for _, v in ipairs(parent_container.children) do
+                v:set_position(v.x + dx, v.y + dy)
+            end
+            self:set_scope(self.scope.x1 + dx, self.scope.y1 + dy, self.scope.x2 + dx, self.scope.y2 + dy)
+        end
+    end
+    function g:mousedown(parent_container, x, y, button)
+        self.held = self.hover
+    end
+    return g
 end
 
 ui.box = function(x, y, w, h, r, g, b, a, draw_background, draw_border)
