@@ -61,7 +61,7 @@ ui.container = function()
     return c
 end
 
-ui.grabber = function(x1, y1, x2, y2, draw_scope)
+ui.grabber = function(x1, y1, x2, y2, draw_scope, do_not_allow_grabber_to_get_lost_outside_the_screen)
     local g = {
         scope = {
             x1 = x1,
@@ -71,7 +71,8 @@ ui.grabber = function(x1, y1, x2, y2, draw_scope)
         },
         hover = false,
         held = false,
-        draw_scope = draw_scope or false
+        draw_scope = draw_scope or false,
+        do_not_allow_grabber_to_get_lost_outside_the_screen = do_not_allow_grabber_to_get_lost_outside_the_screen or false
     }
     function g:draw()
         if draw_scope then
@@ -86,12 +87,30 @@ ui.grabber = function(x1, y1, x2, y2, draw_scope)
             y2 = y2
         }
     end
+    function g:set_do_not_allow_grabber_to_get_lost_outside_the_screen(do_not_allow_grabber_to_get_lost_outside_the_screen)
+        self.do_not_allow_grabber_to_get_lost_outside_the_screen = do_not_allow_grabber_to_get_lost_outside_the_screen
+    end
     function g:mouseup(parent_container, x, y, button, reason)
         self.held = false
     end
     function g:mousemove(parent_container, x, y, dx, dy)
         self.hover = ui.contains(x, y, self.scope.x1, self.scope.y1, self.scope.x2, self.scope.y2)
         local indexes_of_values_to_bring_hover_back = {}
+        if self.do_not_allow_grabber_to_get_lost_outside_the_screen then
+            -- TODO: fix it
+            if self.scope.x1 + dx < 1 then
+                dx = 0
+            end
+            if self.scope.x2 + dx > gfx.WIDTH - 1 then
+                dx = 0
+            end
+            if self.scope.y1 + dx < 1 then
+                dy = 0
+            end
+            if self.scope.y2 + dx > gfx.HEIGHT - 1 then
+                dy = 0
+            end
+        end
         if self.held then
             for _, v in ipairs(parent_container.children) do
                 if v['set_position'] then

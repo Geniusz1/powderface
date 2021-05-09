@@ -8,11 +8,13 @@ local main = ui.container()
 
 local window = ui.box(mx, my, mw, mh)
 
-local input = ui.inputbox(mx + 10, my + 20, 100, 0, 'This is an inputbox')
+local input = ui.inputbox(mx + 10, my + 22, 100, 0, 'This is an inputbox')
 
-local files = ui.list(mx + 10, my + 44, 100, 185)
+local files = ui.list(mx + 10, my + 46, 100, 185)
 
-local text = ui.text(input.x2 + 10, my + 24, 'Powderface v1.0, TPT user interface library made by Geniusz1', 0, 255, 0)
+local title = ui.text(mx + 3, my + 3, 'Powderface')
+
+local text = ui.text(input.x2 + 10, my + 26, 'Powderface v1.0, TPT user interface library made by Geniusz1', 0, 255, 0)
 local text2 = ui.text(input.x2 + 10, text.y2 + 10, 'This is a text')
 local text3 = ui.text(input.x2 + 10, text2.y2 + 10, 'This is also a text, but with a different color', 80, 150, 200)
 
@@ -64,13 +66,14 @@ for i = 2, 24 do
     files:append(item)
 end
 
-local grabber = ui.grabber(window.x, window.y, window.x2, window.y + 10, true)
+local grabber = ui.grabber(window.x, window.y, window.x2, window.y + 12, true, true)
 main:append_grabber(grabber)
 
 main:append(
     window,
     input,
     files,
+    title,
     text,
     text2,
     text3,
