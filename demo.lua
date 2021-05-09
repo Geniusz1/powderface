@@ -1,4 +1,4 @@
-require('scripts.Powderface.Powderface')
+local ui = require('scripts.Powderface.Powderface')
 
 local mw, mh = 420, 274
 local mx, my = gfx.WIDTH/2 - mw/2, gfx.HEIGHT/2 - mh/2
@@ -8,11 +8,11 @@ local main = ui.container()
 
 local window = ui.box(mx, my, mw, mh)
 
-local input = ui.inputbox(mx + 10, my + 10, 100, 0, 'This is an inputbox')
+local input = ui.inputbox(mx + 10, my + 20, 100, 0, 'This is an inputbox')
 
-local files = ui.list(mx + 10, my + 34, 100, 185)
+local files = ui.list(mx + 10, my + 44, 100, 185)
 
-local text = ui.text(input.x2 + 10, my + 14, 'Powderface v1.0, TPT user interface library made by Geniusz1', 0, 255, 0)
+local text = ui.text(input.x2 + 10, my + 24, 'Powderface v1.0, TPT user interface library made by Geniusz1', 0, 255, 0)
 local text2 = ui.text(input.x2 + 10, text.y2 + 10, 'This is a text')
 local text3 = ui.text(input.x2 + 10, text2.y2 + 10, 'This is also a text, but with a different color', 80, 150, 200)
 
@@ -42,8 +42,8 @@ local radiob2 = ui.radio_button(files.x2 + 150, radiob.y2 + 4, 'It\'s so user-fr
 local rgroup = ui.radio_group(radio, radio1, radio2, radio3)
 local rgroup2 = ui.radio_group(radiob, radiob2)
 
-local textscrollllll = ui.scroll_text(files.x2 + 100, radiob.y2 + 84, 100, 'I needed to change thattext to something else, anyway.', 'right')
-local textscrollllllBox = ui.box(files.x2 + 100, radiob.y2 + 80, 100, textscrollllll.h + 5)
+local textscrollllll = ui.scroll_text(files.x2 + 100, radiob.y2 + 74, 100, 'I needed to change thattext to something else, anyway.', 'right')
+local textscrollllllBox = ui.box(files.x2 + 100, radiob.y2 + 70, 100, textscrollllll.h + 5)
 
 local progress = ui.progressbar(files.x2 + 10, radiob.y2 + 24, 200, 10, true)
 progress:set_progress(50)
@@ -63,6 +63,9 @@ for i = 2, 24 do
     local item = ui.flat_button(files.x, files.y, 0, 15, 'butt '..i, function() print('item '..i..' clicked') end)
     files:append(item)
 end
+
+local grabber = ui.grabber(window.x, window.y, window.x2, window.y + 10, true)
+main:append_grabber(grabber)
 
 main:append(
     window,

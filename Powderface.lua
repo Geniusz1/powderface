@@ -75,7 +75,7 @@ ui.grabber = function(x1, y1, x2, y2, draw_scope)
     }
     function g:draw()
         if draw_scope then
-            gfx.drawRect(self.scope.x1, self.scope.y1, self.scope.x2 - self.scope.x1, self.scope.y2 - self.scope.y1)
+            gfx.drawRect(self.scope.x1, self.scope.y1, self.scope.x2 - self.scope.x1 + 1, self.scope.y2 - self.scope.y1 + 1)
         end
     end
     function g:set_scope(x1, y1, x2, y2)
@@ -91,9 +91,21 @@ ui.grabber = function(x1, y1, x2, y2, draw_scope)
     end
     function g:mousemove(parent_container, x, y, dx, dy)
         self.hover = ui.contains(x, y, self.scope.x1, self.scope.y1, self.scope.x2, self.scope.y2)
+        local indexes_of_values_to_bring_hover_back = {}
         if self.held then
             for _, v in ipairs(parent_container.children) do
-                v:set_position(v.x + dx, v.y + dy)
+                if v['set_position'] then
+                    v:set_position((v.x or x) + dx, (v.y or y) + dy)
+                end
+                if v.held then
+                    v.held = false
+                end
+                if v['update_items_position'] then
+                    v:update_items_position()
+                end
+                if v['shift_position'] then
+                    v:shift_position(dx, dy)
+                end
             end
             self:set_scope(self.scope.x1 + dx, self.scope.y1 + dy, self.scope.x2 + dx, self.scope.y2 + dy)
         end
@@ -357,9 +369,7 @@ ui.inputbox = function(x, y, w, h, placeholder, r, g, b)
                 gfx.drawLine(self.text.adjusted_x + cursorx, self.y + 2, self.text.adjusted_x + cursorx, self.y2-2, self.color.r, self.color.g, self.color.b)
             end
         end
-        if #self.text.text ~= 0  then
-            self.text:draw()
-        end
+        self.text:draw()
         if not self.focus and #self.text.text == 0 then
             self.placeholder:draw()
         end
@@ -873,6 +883,11 @@ ui.radio_group = function(...)
         self.enabled = enabled
         for _, butt in ipairs(self.buttons) do
             butt:set_enabled(enabled)
+        end
+    end
+    function rg:shift_position(dx, dy) -- TODO: do it more how it should be done
+        for _, butt in ipairs(self.buttons) do
+            butt:set_position(butt.x + dx, butt.y + dy)
         end
     end
     function rg:mousemove(x, y, dx, dy)
